@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <!-- Настройка viewport — убирает масштабирование при кликах на телефоне -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>КОИН — кликер</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Запрещаем любые зумы на телефоне */
+        body {
+            touch-action: manipulation;
+            -webkit-text-size-adjust: 100%;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            min-height: 100vh;
+            transition: background 0.3s, color 0.2s;
+        }
+
+        body:not(.registered) {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        body.light-reg { background: linear-gradient(135deg, #7c3aed, #2563eb); }
+        body.dark-reg { background: #0f172a; }
+
+        .register-screen {
+            max-width: 340px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .main-title {
+            font-size: 44px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .register-card {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(12px);
+            border-radius: 32px;
+            padding: 24px 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .register-card input, .register-card textarea {
+            width: 100%;
+            padding: 14px;
+            margin: 10px 0;
+            border-radius: 60px;
+            border: none;
+            background: rgba(255,255,255,0.95);
+            font-size: 16px;
+            text-align: center;
+        }
+        .register-card textarea {
+            border-radius: 24px;
+            min-height: 80px;
+            text-align: left;
+            font-family: inherit;
+        }
+        .register-btn {
+            background: #facc15;
+            color: #4c1d95;
+            font-weight: bold;
+            width: 100%;
+            padding: 14px;
+            border-radius: 60px;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+        .support-bottom { margin-top: 24px; }
+        .support-link {
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            font-size: 14px;
+        }
+        body.dark-reg .register-card {
+            background: #1e293b;
+            border-color: #334155;
+        }
+        body.dark-reg .register-card input,
+        body.dark-reg .register-card textarea {
+            background: #0f172a;
+            color: white;
+        }
+
+        /* === ИГРОВОЙ ИНТЕРФЕЙС === */
+        .game-container {
+            display: none;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        body.registered.light { background: #f3f4f6; color: #1f2937; }
+        body.registered.dark { background: #0f172a; color: #e2e8f0; }
+
+        .card {
+            background: white;
+            border-radius: 32px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid #e5e7eb;
+        }
+        body.dark .card {
+            background: #1e293b;
+            border-color: #334155;
+        }
+        .balance-box {
+            text-align: center;
+            background: rgba(0,0,0,0.03);
+            border-radius: 28px;
+            padding: 16px;
+            margin: 10px 0;
+        }
+        .balance-number { font-size: 52px; font-weight: 800; }
+        button {
+            background: #8b5cf6;
+            border: none;
+            width: 100%;
+            padding: 14px;
+            border-radius: 40px;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            margin: 8px 0;
+            cursor: pointer;
+        }
+        .top-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .avatar {
+            font-size: 40px;
+            width: 52px;
+            height: 52px;
+            background: rgba(0,0,0,0.05);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .small-btn {
+            width: auto;
+            padding: 8px 16px;
+            background: #475569;
+        }
+        .status {
+            background: #10b981;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 40px;
+            font-size: 13px;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+        .premium-nick {
+            background: linear-gradient(90deg, #facc15, #fff7ad, #facc15);
+            background-size: 200%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: shine 2s linear infinite;
+            font-weight: bold;
+        }
+        @keyframes shine {
+            from { background-position: 0%; }
+            to { background-position: 200%; }
+        }
+        .premium-badge {
+            background: #facc15;
+            color: #4c1d95;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            margin-left: 6px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 32px;
+            border: 1px solid #cbd5e1;
+            font-size: 15px;
+        }
+        body.dark input, body.dark textarea {
+            background: #0f172a;
+            color: white;
+            border-color: #334155;
+        }
+
+        .modal, .avatar-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            max-width: 360px;
+            width: 90%;
+            background: #1e293b;
+            border-radius: 32px;
+            padding: 24px;
+            color: white;
+        }
+        body.light .modal-content {
+            background: white;
+            color: #1f2937;
+        }
+        .close-modal {
+            text-align: right;
+            font-size: 28px;
+            cursor: pointer;
+            margin-bottom: 8px;
+        }
+        .avatar-modal {
+            flex-direction: column;
+            padding: 20px;
+        }
+        .avatar-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            padding-bottom: 16px;
+        }
+        .avatar-modal-close {
+            background: none;
+            width: auto;
+            font-size: 28px;
+            padding: 0 8px;
+            margin: 0;
+            cursor: pointer;
+            color: white;
+        }
+        .avatar-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            overflow-y: auto;
+            max-height: 70vh;
+            padding: 8px;
+        }
+        .emoji-item {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            font-size: 38px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+        }
+        hr { margin: 16px 0; }
+    </style>
+</head>
+<body class="light-reg">
+
+<div id="registerScreen" class="register-screen">
+    <div class="main-title">КОИН</div>
+    <div class="register-card">
+        <input type="text" id="regNick" placeholder="Придумай ник">
+        <textarea id="regAbout" rows="3" placeholder="О себе (необязательно)"></textarea>
+        <button id="registerBtn" class="register-btn">ЗАРЕГИСТРИРОВАТЬСЯ</button>
+    </div>
+    <div class="support-bottom">
+        <a href="https://t.me/Coin_helping_bot" target="_blank" class="support-link">🆘 Поддержка @Coin_helping_bot</a>
+    </div>
+</div>
+
+<!-- ИГРОВОЙ ИНТЕРФЕЙС -->
+<div id="gameContainer" class="game-container">
+    <div class="card">
+        <div class="top-bar">
+            <div id="avatarBtn" class="avatar">🧩</div>
+            <div style="flex:1"><span id="nicknameDisplay"></span></div>
+            <button id="refreshBtn" class="small-btn">🔄</button>
+            <button id="settingsBtn" class="small-btn">⚙️</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="balance-box">
+            <div>ТВОЙ БАЛАНС</div>
+            <div class="balance-number" id="balance">0</div>
+            <div>коины</div>
+        </div>
+        <div id="boostStatus" style="text-align: center;"></div>
+        <button id="clickBtn">🧩 КЛИКНУТЬ (+<span id="clickPower">1</span> коин)</button>
+        <div style="margin-top:10px;">📊 Всего кликов: <span id="clickCount">0</span></div>
+    </div>
+
+    <div class="card"><h3>🛍️ МАГАЗИН</h3><div id="shopItems"></div></div>
+    <div class="card"><h3>🎟️ ПРОМОКОИНЫ</h3>
+        <input type="text" id="promoCode" placeholder="Введите промокоин">
+        <button id="activatePromoBtn">Активировать</button>
+        <div id="promoStatus" style="font-size:14px;margin-top:8px;"></div>
+    </div>
+</div>
+
+<div id="avatarSelectModal" class="avatar-modal">
+    <div class="avatar-modal-header">
+        <span>🎨 ВЫБОР АВАТАРА</span>
+        <div class="avatar-modal-close" id="closeAvatarModalBtn">✖</div>
+    </div>
+    <div class="avatar-grid" id="avatarGrid"></div>
+</div>
+
+<div id="settingsModal" class="modal">
+    <div class="modal-content">
+        <div class="close-modal" id="closeSettingsModalBtn">✖</div>
+        <h3>⚙️ НАСТРОЙКИ</h3>
+        <label>Новый ник (100 коинов):</label>
+        <input type="text" id="newNick" placeholder="Новый ник">
+        <button id="changeNickBtn">Сменить ник</button>
+        <div style="margin:16px 0;"><label>Тема:</label>
+            <div style="display:flex;gap:10px;margin-top:8px;">
+                <button id="lightThemeBtn">☀️ Светлая</button>
+                <button id="darkThemeBtn">🌙 Тёмная</button>
+            </div>
+        </div>
+        <hr>
+        <button id="logoutBtn" style="background:#ef4444;">🚪 Выйти из аккаунта</button>
+    </div>
+</div>
+
+<script>
+    const tg = window.Telegram.WebApp;
+    if (tg) { tg.ready(); tg.expand(); }
+
+    let registered = false;
+    let balance = 0, clicks = 0, nickname = "", avatar = "🧩", aboutMe = "", isPremium = false;
+    let premiumExpire = 0, usedPromoCodes = [], clickPower = 1, hasDiscount = false;
+    let boostEndTime = 0, boostOriginalPower = 1;
+
+    let lastClickTime = 0;
+    let isBlocked = false;
+    let blockTimer = null;
+    const BLOCK_DURATION = 5000;
+    const MIN_CLICK_INTERVAL = 100;
+
+    const allEmojis = [
+        "😀","😃","😄","😁","😆","😅","😂","🤣","😊","😇","🙂","🙃","😉","😌","😍","🥰","😘","😗","😙","😚","😋","😛","😝","😜","🤪","🤨","🧐","🤓","😎","🥸","🤩","🥳","😏","😒","😞","😔","😟","😕","🙁","☹️","😣","😖","😫","😩","🥺","😢","😭","😤","😠","😡","🤬","🤯","😳","🥵","🥶","😱","😨","😰","😥","😓","🤗","🤔","🤭","🤫","🤥","😐","😑","😬","🙄","😯","😦","😧","😮","😲","🥱","😴","🤤","😪","😵","🤐","🥴","🤢","🤮","🤧","😷","🤒","🤕","🤑","🤠","😈","👿","👹","👺","🤡","💩","👻","💀","☠️","👽","🤖","🎃","🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐸","🐒","🐔","🐧","🐦","🐤","🐣","🐥","🐺","🐗","🐴","🦄","🐝","🐛","🦋","🐌","🐞","🐜","🐢","🐍","🦎","🐙","🦑","🦐","🦞","🐠","🐟","🐡","🐬","🐳","🐋","🦈","🐊","🐅","🐆","🦓","🦍","🦧","🐘","🦛","🦏","🐪","🐫","🦒","🦘","🦙","🐐","🦌","🐕","🐩","🦮","🐈","🐈⬛","🪶","🐓","🦃","🦚","🦜","🦢","🦩","🕊️","🐇","🦝","🦨","🦡","🦫","🦦","🦥","🐁","🐀","🐿️","🦔","🐉","🐲","🌵","🎄","🌲","🌳","🌴","🌱","🌿","☘️","🍀","🎍","🍃","🍂","🍁","🍄","🐚","🌾","💐","🌸","🌷","🌹","🥀","🌺","🌸","🌼","🌻","🌞","🌝","🌛","🌜","🌚","🌕","🌖","🌗","🌘","🌑","🌒","🌓","🌔","🌙","🌎","🌍","🌏","🪐","💫","⭐","🌟","✨","⚡","🔥","💥","💦","💨","🌊","🍏","🍎","🍐","🍊","🍋","🍌","🍉","🍇","🍓","🫐","🍈","🍒","🍑","🥭","🍍","🥥","🥝","🍅","🍆","🥑","🥦","🥬","🥒","🌶️","🫑","🌽","🥕","🫒","🧄","🧅","🥔","🍠","🥐","🥯","🍞","🥖","🥨","🧀","🥚","🍳","🧈","🥞","🧇","🥓","🥩","🍗","🍖","🦴","🌭","🍔","🍟","🍕","🥪","🥙","🧆","🌮","🌯","🫔","🥗","🥘","🫕","🥫","🍝","🍜","🍲","🍛","🍣","🍱","🥟","🍤","🍙","🍚","🍘","🍥","🥠","🥮","🍢","🍡","🍧","🍨","🍦","🥧","🧁","🍰","🎂","🍮","🍭","🍬","🍫","🍿","🍩","🍪","🌰","🥜","🍯","🥛","🍼","☕","🍵","🧃","🥤","🧋","🍶","🍺","🍻","🥂","🍷","🥃","🍸","🍹","🧉","🍾","🧊","🥄","🍴","🍽️","🥢","🧸","🎈","🎉","🎊","🎁","🕯️","💡","🔦","🏮","🪔","🧧","📿","⚖️","🪙","💎","🔮","🧿","🪬"
+    ];
+
+    function containsCrown(s) { return s && s.includes("👑"); }
+    
+    function saveData() {
+        if (!registered) return;
+        localStorage.setItem("registered","true");
+        localStorage.setItem("balance",balance);
+        localStorage.setItem("clicks",clicks);
+        localStorage.setItem("nickname",nickname);
+        localStorage.setItem("avatar",avatar);
+        localStorage.setItem("aboutMe",aboutMe);
+        localStorage.setItem("isPremium",isPremium);
+        localStorage.setItem("premiumExpire",premiumExpire);
+        localStorage.setItem("clickPower",clickPower);
+        localStorage.setItem("hasDiscount",hasDiscount);
+        localStorage.setItem("usedPromoCodes",JSON.stringify(usedPromoCodes));
+        localStorage.setItem("boostEndTime",boostEndTime);
+        localStorage.setItem("boostOriginalPower",boostOriginalPower);
+    }
+    
+    function loadData() {
+        if (localStorage.getItem("registered") !== "true") return;
+        registered = true;
+        balance = Number(localStorage.getItem("balance")) || 0;
+        clicks = Number(localStorage.getItem("clicks")) || 0;
+        nickname = localStorage.getItem("nickname") || "Игрок";
+        avatar = localStorage.getItem("avatar") || "🧩";
+        aboutMe = localStorage.getItem("aboutMe") || "";
+        isPremium = localStorage.getItem("isPremium") === "true";
+        premiumExpire = Number(localStorage.getItem("premiumExpire")) || 0;
+        clickPower = Number(localStorage.getItem("clickPower")) || 1;
+        hasDiscount = localStorage.getItem("hasDiscount") === "true";
+        usedPromoCodes = JSON.parse(localStorage.getItem("usedPromoCodes") || "[]");
+        boostEndTime = Number(localStorage.getItem("boostEndTime")) || 0;
+        boostOriginalPower = Number(localStorage.getItem("boostOriginalPower")) || 1;
+        if (isPremium && premiumExpire && Date.now() > premiumExpire) { 
+            isPremium = false; premiumExpire = 0; saveData(); 
+            if (registered) alert("Премиум закончился");
+        }
+    }
+
+    function updateUI() {
+        document.getElementById("balance").innerText = balance;
+        document.getElementById("clickCount").innerText = clicks;
+        document.getElementById("clickPower").innerText = clickPower;
+        document.getElementById("avatarBtn").innerText = avatar;
+        const nickSpan = document.getElementById("nicknameDisplay");
+        if (isPremium) {
+            nickSpan.innerHTML = `${nickname}<span class="premium-badge">⭐ PREMIUM</span>`;
+            nickSpan.classList.add("premium-nick");
+        } else {
+            nickSpan.innerText = nickname;
+            nickSpan.classList.remove("premium-nick");
+        }
+    }
+
+    function setTheme(theme) {
+        document.body.classList.remove("light","dark");
+        document.body.classList.add(theme);
+        localStorage.setItem("savedTheme", theme);
+    }
+
+    function showGame() {
+        registerScreen.style.display = "none";
+        gameContainer.style.display = "block";
+        document.body.classList.add("registered");
+        document.body.classList.remove("light-reg","dark-reg");
+        const saved = localStorage.getItem("savedTheme") || "light";
+        setTheme(saved);
+        updateUI(); renderShop();
+    }
+    
+    function showRegister() {
+        registerScreen.style.display = "block";
+        gameContainer.style.display = "none";
+        document.body.classList.remove("registered","light","dark");
+        document.body.classList.add("light-reg");
+    }
+
+    document.getElementById("registerBtn").onclick = () => {
+        const nick = document.getElementById("regNick").value.trim();
+        if (!nick) { alert("Введите ник!"); return; }
+        if (containsCrown(nick)) { alert("Ник не может содержать корону 👑!"); return; }
+        registered = true;
+        nickname = nick;
+        aboutMe = document.getElementById("regAbout").value.trim() || "";
+        avatar = "🧩";
+        saveData();
+        showGame();
+    };
+    
+    // КНОПКИ ТЕМ УБРАНЫ С ЭКРАНА РЕГИСТРАЦИИ (они теперь только в настройках игры)
+
+    function blockClicks() {
+        if (isBlocked) return;
+        isBlocked = true;
+        const statusDiv = document.getElementById("boostStatus");
+        const warnDiv = document.createElement("div");
+        warnDiv.className = "status";
+        warnDiv.style.background = "#ef4444";
+        warnDiv.innerText = "⚠️ ПОДОЗРИТЕЛЬНАЯ АКТИВНОСТЬ! БЛОКИРОВКА 5 СЕКУНД";
+        statusDiv.appendChild(warnDiv);
+        if (blockTimer) clearTimeout(blockTimer);
+        blockTimer = setTimeout(() => { 
+            isBlocked = false; 
+            if (warnDiv && warnDiv.remove) warnDiv.remove(); 
+        }, BLOCK_DURATION);
+    }
+
+    document.getElementById("clickBtn").onclick = () => {
+        if (isBlocked) return;
+        const now = Date.now();
+        if (now - lastClickTime < MIN_CLICK_INTERVAL) {
+            blockClicks();
+            return;
+        }
+        lastClickTime = now;
+        let gain = clickPower;
+        if (isPremium) gain = Math.floor(gain * 1.05);
+        balance += gain; clicks++;
+        updateUI(); saveData();
+        if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
+    };
+
+    function applyBoost(sec, extra) {
+        if (boostEndTime === 0) boostOriginalPower = clickPower;
+        clickPower += extra;
+        boostEndTime = Date.now() + sec * 1000;
+        updateUI(); saveData();
+    }
+    
+    function updateBoostTimer() {
+        const statusDiv = document.getElementById("boostStatus");
+        const oldBoost = statusDiv.querySelector(".boost-timer");
+        if (boostEndTime > 0) {
+            const left = Math.ceil((boostEndTime - Date.now()) / 1000);
+            if (left <= 0) {
+                clickPower = boostOriginalPower;
+                boostEndTime = 0;
+                if (oldBoost) oldBoost.remove();
+                updateUI(); saveData();
+            } else {
+                if (!oldBoost) {
+                    const newBoost = document.createElement("div");
+                    newBoost.className = "status boost-timer";
+                    statusDiv.appendChild(newBoost);
+                    newBoost.innerText = `⚡ БУСТ АКТИВЕН: ${left} сек`;
+                } else {
+                    oldBoost.innerText = `⚡ БУСТ АКТИВЕН: ${left} сек`;
+                }
+            }
+        } else {
+            if (oldBoost) oldBoost.remove();
+        }
+        requestAnimationFrame(updateBoostTimer);
+    }
+    updateBoostTimer();
+
+    const shopItems = [
+        { id:"boost", name:"⚡ Буст силы +2 на 60 сек", price:80, act:()=>applyBoost(60,2) },
+        { id:"premium", name:"👑 Премиум на 30 дней", price:1500, act:()=>{ isPremium=true; premiumExpire=Date.now()+30*24*3600*1000; alert("Премиум активирован!"); } },
+        { id:"click", name:"⚡ Постоянное улучшение +1", price:100, act:()=>{ clickPower++; } },
+        { id:"discount", name:"🏷️ Скидка 10%", price:1000, act:()=>{ hasDiscount=true; } }
+    ];
+    function renderShop() {
+        const box = document.getElementById("shopItems"); box.innerHTML = "";
+        for (let it of shopItems) {
+            if (it.id==="discount" && hasDiscount) continue;
+            let price = it.price;
+            if (hasDiscount && it.id!=="discount") price = Math.floor(price * 0.9);
+            const btn = document.createElement("button");
+            btn.innerText = `${it.name} — ${price} коинов`;
+            btn.onclick = () => {
+                if (balance < price) { alert("Не хватает коинов!"); return; }
+                balance -= price;
+                it.act();
+                saveData(); updateUI(); renderShop();
+                alert(`Куплено: ${it.name}`);
+            };
+            box.appendChild(btn);
+        }
+    }
+
+    const codes = { START100:100, GOLD50:50, FRIEND:25, POWERUP:200, TEST1000:1000, ULTRA500:500, PROMO300:300, COIN250:250 };
+    document.getElementById("activatePromoBtn").onclick = () => {
+        const code = document.getElementById("promoCode").value.trim().toUpperCase();
+        const statusDiv = document.getElementById("promoStatus");
+        if (!code) return;
+        if (usedPromoCodes.includes(code)) { statusDiv.innerText = "❌ Уже использован"; setTimeout(()=>statusDiv.innerText="",3000); return; }
+        if (codes[code]) {
+            balance += codes[code]; usedPromoCodes.push(code);
+            saveData(); updateUI();
+            statusDiv.innerText = `🎉 +${codes[code]} коинов!`;
+            setTimeout(()=>statusDiv.innerText="",3000);
+            document.getElementById("promoCode").value = "";
+        } else { statusDiv.innerText = "❌ Неверный промокоин"; setTimeout(()=>statusDiv.innerText="",3000); }
+    };
+
+    function renderAvatarPicker() {
+        const grid = document.getElementById("avatarGrid"); grid.innerHTML = "";
+        allEmojis.forEach(e => {
+            const div = document.createElement("div"); div.className = "emoji-item"; div.innerText = e;
+            div.onclick = () => { avatar = e; avatarModal.style.display = "none"; updateUI(); saveData(); };
+            grid.appendChild(div);
+        });
+    }
+    const avatarModal = document.getElementById("avatarSelectModal");
+    document.getElementById("avatarBtn").onclick = () => { renderAvatarPicker(); avatarModal.style.display = "flex"; };
+    document.getElementById("closeAvatarModalBtn").onclick = () => avatarModal.style.display = "none";
+
+    const settingsModal = document.getElementById("settingsModal");
+    document.getElementById("settingsBtn").onclick = () => settingsModal.style.display = "flex";
+    document.getElementById("closeSettingsModalBtn").onclick = () => settingsModal.style.display = "none";
+    document.getElementById("lightThemeBtn").onclick = () => setTheme("light");
+    document.getElementById("darkThemeBtn").onclick = () => setTheme("dark");
+    document.getElementById("changeNickBtn").onclick = () => {
+        const newNick = document.getElementById("newNick").value.trim();
+        if (!newNick) { alert("Введите ник!"); return; }
+        if (containsCrown(newNick)) { alert("Ник не может содержать корону 👑!"); return; }
+        if (balance < 100) { alert("Не хватает 100 коинов!"); return; }
+        balance -= 100; nickname = newNick;
+        document.getElementById("newNick").value = "";
+        settingsModal.style.display = "none";
+        saveData(); updateUI();
+        alert(`Ник изменён на ${newNick}`);
+    };
+    document.getElementById("refreshBtn").onclick = () => location.reload();
+    document.getElementById("logoutBtn").onclick = () => { if(confirm("Все данные будут потеряны. Выйти?")){ localStorage.clear(); location.reload(); } };
+
+    loadData();
+    if (registered) showGame();
+    else showRegister();
+</script>
+
+</body>
+</html>
