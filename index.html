@@ -12,10 +12,7 @@
             color: white;
             padding: 16px;
             min-height: 100vh;
-            transition: background 0.3s, color 0.2s;
         }
-        body.light { background: #f3f4f6; color: #1f2937; }
-        body.dark { background: #0f172a; color: #e2e8f0; }
         .card {
             background: rgba(255,255,255,0.15);
             backdrop-filter: blur(12px);
@@ -24,14 +21,7 @@
             margin-bottom: 16px;
             border: 1px solid rgba(255,255,255,0.2);
         }
-        body.light .card { background: white; border: 1px solid #e5e7eb; }
-        body.dark .card { background: #1e293b; border: 1px solid #334155; }
-        .balance {
-            font-size: 48px;
-            font-weight: 800;
-            text-align: center;
-            margin: 10px 0;
-        }
+        .balance { font-size: 48px; font-weight: 800; text-align: center; margin: 10px 0; }
         button {
             background: #facc15;
             color: #4c1d95;
@@ -44,73 +34,34 @@
             cursor: pointer;
             margin: 8px 0;
         }
-        .nav {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            margin-bottom: 16px;
-        }
-        .nav-btn {
-            background: rgba(0,0,0,0.4);
-            border: none;
-            padding: 10px 20px;
-            border-radius: 40px;
-            color: white;
-            font-weight: 600;
-            white-space: nowrap;
-            cursor: pointer;
-        }
+        .nav { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 16px; }
+        .nav-btn { background: rgba(0,0,0,0.4); border: none; padding: 10px 20px; border-radius: 40px; color: white; font-weight: 600; white-space: nowrap; cursor: pointer; }
         .nav-btn.active { background: #facc15; color: #4c1d95; }
         .page { display: none; }
         .page.active-page { display: block; }
-        input {
-            width: 100%;
-            padding: 12px;
-            border-radius: 40px;
-            border: none;
-            margin: 8px 0;
-            font-size: 16px;
-        }
-        .leaderboard-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-        }
+        input { width: 100%; padding: 12px; border-radius: 40px; border: none; margin: 8px 0; font-size: 16px; }
+        .leaderboard-item { display: flex; align-items: center; gap: 12px; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.2); }
         .avatar-small { font-size: 40px; cursor: pointer; }
-        .profile-bar {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: rgba(0,0,0,0.2);
-            border-radius: 60px;
-            padding: 8px 16px;
-            margin-bottom: 16px;
-        }
+        .profile-bar { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.2); border-radius: 60px; padding: 8px 16px; margin-bottom: 16px; }
         .admin-table { width: 100%; font-size: 12px; border-collapse: collapse; }
         .admin-table th, .admin-table td { padding: 8px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.2); }
         .status-msg { font-size: 14px; text-align: center; margin-top: 8px; min-height: 40px; }
-        .register-container, .login-container { max-width: 400px; margin: 20px auto; text-align: center; }
+        .auth-card { max-width: 400px; margin: 20px auto; text-align: center; }
         .avatar-selector { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 15px 0; }
         .avatar-option { font-size: 36px; cursor: pointer; padding: 5px; border-radius: 20px; background: rgba(255,255,255,0.2); }
         .avatar-option.selected { background: #facc15; transform: scale(1.1); }
         .switch-link { color: #facc15; cursor: pointer; text-decoration: underline; margin-top: 15px; display: inline-block; }
         .danger-btn { background: #ef4444; margin-top: 10px; }
-        .settings-panel { margin-top: 20px; }
     </style>
 </head>
 <body>
     <div id="gameContainer" style="display: none;">
         <div class="profile-bar">
             <div id="avatarBtn" class="avatar-small">🧩</div>
-            <div style="flex:1">
-                <div><span id="nickname">Игрок</span></div>
-                <div>💰 <span id="balance">0</span> коинов</div>
-            </div>
-            <button id="settingsBtn" style="width:auto; padding:8px 12px; background:#475569;">⚙️</button>
+            <div style="flex:1"><div><span id="nickname">Игрок</span></div><div>💰 <span id="balance">0</span> коинов</div></div>
             <button id="refreshBtn" style="width:auto; padding:8px 12px; background:#475569;">🔄</button>
             <button id="logoutBtn" style="width:auto; padding:8px 12px; background:#ef4444;">🚪</button>
+            <button id="settingsBtn" style="width:auto; padding:8px 12px; background:#475569;">⚙️</button>
         </div>
 
         <div class="nav">
@@ -130,54 +81,25 @@
             </div>
         </div>
 
-        <div id="page-shop" class="page">
-            <div class="card"><h3>🛍️ МАГАЗИН</h3><div id="shopItems"></div></div>
-        </div>
+        <div id="page-shop" class="page"><div class="card"><h3>🛍️ МАГАЗИН</h3><div id="shopItems"></div></div></div>
+        <div id="page-promo" class="page"><div class="card"><h3>🎟️ ПРОМОКОД</h3><input id="promoCode" placeholder="Введите промокод"><button id="activateBtn">Активировать</button><div id="promoStatus" class="status-msg"></div></div></div>
+        <div id="page-transfer" class="page"><div class="card"><h3>🤝 ПЕРЕВОД</h3><input id="transferTo" placeholder="Telegram ID получателя"><input id="transferAmount" type="number" placeholder="Сумма"><button id="transferBtn">Отправить</button><div id="transferStatus" class="status-msg"></div></div></div>
+        <div id="page-leaderboard" class="page"><div class="card"><h3>🏆 ТОП ИГРОКОВ</h3><div id="leaderboardList">Загрузка...</div></div></div>
+        <div id="page-admin" class="page"><div class="card"><h3>👑 АДМИНКА</h3><div id="adminPanel"></div></div></div>
 
-        <div id="page-promo" class="page">
-            <div class="card"><h3>🎟️ ПРОМОКОД</h3>
-                <input id="promoCode" placeholder="Введите промокод"><button id="activateBtn">Активировать</button>
-                <div id="promoStatus" class="status-msg"></div>
-            </div>
-        </div>
-
-        <div id="page-transfer" class="page">
-            <div class="card"><h3>🤝 ПЕРЕВОД</h3>
-                <input id="transferTo" placeholder="Telegram ID получателя">
-                <input id="transferAmount" type="number" placeholder="Сумма">
-                <button id="transferBtn">Отправить</button>
-                <div id="transferStatus" class="status-msg"></div>
-            </div>
-        </div>
-
-        <div id="page-leaderboard" class="page">
-            <div class="card"><h3>🏆 ТОП ИГРОКОВ</h3><div id="leaderboardList">Загрузка...</div></div>
-        </div>
-
-        <div id="page-admin" class="page">
-            <div class="card"><h3>👑 АДМИНКА</h3><div id="adminPanel"></div></div>
-        </div>
-
-        <!-- Панель настроек (тема и удаление аккаунта) -->
         <div id="settingsPanel" class="card" style="display: none;">
             <h3>⚙️ НАСТРОЙКИ</h3>
-            <div style="margin: 10px 0;">
-                <label>Тема:</label>
-                <button id="lightThemeBtn" style="background: #f3f4f6; color: black; width: auto; padding: 8px 16px; margin-right: 10px;">☀️ Светлая</button>
-                <button id="darkThemeBtn" style="background: #0f172a; color: white; width: auto; padding: 8px 16px;">🌙 Тёмная</button>
-            </div>
-            <div style="margin: 10px 0;">
-                <button id="deleteAccountBtn" class="danger-btn" style="background: #ef4444;">🗑️ УДАЛИТЬ АККАУНТ</button>
-            </div>
+            <button id="lightThemeBtn" style="background: #f3f4f6; color: black;">☀️ Светлая тема</button>
+            <button id="darkThemeBtn" style="background: #0f172a; color: white;">🌙 Тёмная тема</button>
+            <button id="deleteAccountBtn" class="danger-btn">🗑️ УДАЛИТЬ АККАУНТ</button>
         </div>
     </div>
 
     <div id="authContainer">
-        <div id="registerForm" class="register-container">
+        <div id="registerForm" class="auth-card">
             <div class="card">
                 <h2>📝 РЕГИСТРАЦИЯ</h2>
-                <p>Ваш Telegram ID: <strong id="regTgIdDisplay">-</strong></p>
-                <input type="text" id="regTgId" placeholder="Изменить ID (если нужно)">
+                <input type="text" id="regTgId" placeholder="Telegram ID (автоматически)">
                 <input type="text" id="regNick" placeholder="Никнейм">
                 <input type="password" id="regPassword" placeholder="Пароль">
                 <div class="avatar-selector" id="avatarSelector"></div>
@@ -186,11 +108,10 @@
             </div>
         </div>
 
-        <div id="loginForm" class="login-container" style="display: none;">
+        <div id="loginForm" class="auth-card" style="display: none;">
             <div class="card">
                 <h2>🔐 ВХОД</h2>
-                <p>Ваш Telegram ID: <strong id="loginTgIdDisplay">-</strong></p>
-                <input type="text" id="loginTgId" placeholder="Изменить ID (если нужно)">
+                <input type="text" id="loginTgId" placeholder="Telegram ID">
                 <input type="password" id="loginPassword" placeholder="Пароль">
                 <button id="loginBtn">ВОЙТИ</button>
                 <div><span class="switch-link" id="showRegisterBtn">Нет аккаунта? Зарегистрироваться</span></div>
@@ -215,22 +136,13 @@
             tg.ready();
             if (tg.initDataUnsafe?.user?.id) autoTgId = tg.initDataUnsafe.user.id.toString();
         }
-        if (!autoTgId) {
-            autoTgId = localStorage.getItem('testTgId');
-            if (!autoTgId) {
-                autoTgId = 'test_' + Math.random().toString(36).substr(2, 8);
-                localStorage.setItem('testTgId', autoTgId);
-            }
-        }
+        if (!autoTgId) autoTgId = 'test_' + Math.random().toString(36).substr(2, 8);
 
-        document.getElementById('regTgIdDisplay').innerText = autoTgId;
         document.getElementById('regTgId').value = autoTgId;
-        document.getElementById('loginTgIdDisplay').innerText = autoTgId;
-        document.getElementById('loginTgId').value = autoTgId;
 
-        async function apiCall(endpoint, data, method = 'POST') {
+        async function apiCall(endpoint, data) {
             const res = await fetch(`${API_URL}${endpoint}`, {
-                method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
             });
             return res.json();
         }
@@ -302,17 +214,14 @@
             }
         }
 
-        async function buy(itemId, cost, extra = null) {
-            const body = { tgId: currentTgId, itemId, cost };
-            if (extra) body.newNick = extra;
-            const data = await apiCall('/api/buy', body);
+        async function buy(itemId, cost) {
+            const data = await apiCall('/api/buy', { tgId: currentTgId, itemId, cost });
             if (data.success) {
                 currentUser.balance = data.balance;
                 if (data.clickPower) currentUser.clickPower = data.clickPower;
-                if (data.nickname) currentUser.nickname = data.nickname;
                 updateUI();
                 renderShop();
-            } else { alert(data.error); }
+            } else alert(data.error);
         }
 
         function renderShop() {
@@ -320,20 +229,12 @@
             if (!container) return;
             container.innerHTML = '';
             const items = [
-                { name: '⬆️ Улучшение клика +1', cost: 100, id: 'clickPower' },
-                { name: '✏️ Сменить ник', cost: 100, id: 'changeNick', needNick: true }
+                { name: '⬆️ Улучшение клика +1', cost: 100, id: 'clickPower' }
             ];
             items.forEach(item => {
                 const btn = document.createElement('button');
                 btn.innerText = `${item.name} — ${item.cost} коинов`;
-                btn.onclick = () => {
-                    if (item.needNick) {
-                        const newNick = prompt('Введите новый ник:', currentUser.nickname);
-                        if (newNick && newNick.trim()) buy(item.id, item.cost, newNick.trim());
-                    } else {
-                        buy(item.id, item.cost);
-                    }
-                };
+                btn.onclick = () => buy(item.id, item.cost);
                 container.appendChild(btn);
             });
         }
@@ -359,7 +260,7 @@
             const container = document.getElementById('adminPanel');
             if (!container) return;
             if (users.error) { container.innerHTML = 'Ошибка загрузки'; return; }
-            let html = '<table class="admin-table"><tr><th>ID</th><th>Ник</th><th>Баланс</th></tr>';
+            let html = '<table class="admin-table"><tr><th>ID</th><th>Ник</th><th>Баланс</th><tr>';
             users.forEach(u => { html += `<tr><td>${u.tgId}</td><td>${u.nickname}</td><td>${u.balance}</td></tr>`; });
             html += '</table>';
             container.innerHTML = html;
@@ -368,6 +269,7 @@
         document.getElementById('clickBtn').onclick = clickAction;
         document.getElementById('refreshBtn').onclick = () => { loadUser(currentTgId).then(u => { currentUser = u; updateUI(); }); };
         document.getElementById('logoutBtn').onclick = logout;
+
         document.getElementById('settingsBtn').onclick = () => {
             const panel = document.getElementById('settingsPanel');
             panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
@@ -387,7 +289,7 @@
         else if (savedTheme === 'dark') document.body.classList.add('dark');
 
         document.getElementById('deleteAccountBtn').onclick = async () => {
-            const pwd = prompt('Введите пароль для подтверждения удаления аккаунта:\n\n⚠️ ВНИМАНИЕ! Это действие НЕОБРАТИМО. Все данные будут удалены без возможности восстановления.');
+            const pwd = prompt('Введите пароль для подтверждения удаления аккаунта:\n\n⚠️ ВНИМАНИЕ! Это действие НЕОБРАТИМО.');
             if (!pwd) return;
             const data = await apiCall('/api/deleteAccount', { tgId: currentTgId, password: pwd });
             if (data.success) { alert('Аккаунт удалён'); logout(); }
@@ -470,4 +372,40 @@
         document.getElementById('registerBtn').onclick = () => {
             const tgId = document.getElementById('regTgId').value.trim();
             const nick = document.getElementById('regNick').value.trim();
-            const pwd = document.getElementById('regPassword
+            const pwd = document.getElementById('regPassword').value;
+            const avatar = document.getElementById('registerBtn').getAttribute('data-avatar') || '🧩';
+            if (!tgId || !nick || !pwd) { alert('Заполните все поля'); return; }
+            register(tgId, nick, pwd, avatar);
+        };
+        document.getElementById('loginBtn').onclick = () => {
+            const tgId = document.getElementById('loginTgId').value.trim();
+            const pwd = document.getElementById('loginPassword').value;
+            if (!tgId || !pwd) { alert('Введите ID и пароль'); return; }
+            login(tgId, pwd);
+        };
+        document.getElementById('showLoginBtn').onclick = () => {
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('loginTgId').value = autoTgId;
+        };
+        document.getElementById('showRegisterBtn').onclick = () => {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            document.getElementById('regTgId').value = autoTgId;
+        };
+
+        renderAvatarSelector();
+        const savedTgId = localStorage.getItem('currentTgId');
+        if (savedTgId) {
+            loadUser(savedTgId).then(user => {
+                if (user) {
+                    currentUser = user;
+                    currentTgId = savedTgId;
+                    showGame();
+                    updateUI();
+                } else logout();
+            }).catch(() => logout());
+        }
+    </script>
+</body>
+</html>
