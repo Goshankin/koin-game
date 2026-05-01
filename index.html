@@ -209,7 +209,7 @@
         if (tg) { tg.ready(); tg.expand(); }
         
         const ADMIN_ID = '1392352542';
-        const API_URL = 'https://koin-mini-app.gcebotar29.workers.dev';
+        const API_URL = 'https://koin-api.gcebotar29.workers.dev';
         
         let userId = null;
         let userData = {
@@ -264,6 +264,10 @@
             try {
                 const resp = await fetch(`${API_URL}/api/user?userId=${userId}`);
                 const data = await resp.json();
+                if (data.error) {
+                    console.error(data.error);
+                    return;
+                }
                 userData = {
                     balance: data.balance || 0,
                     clicks: data.clicks || 0,
