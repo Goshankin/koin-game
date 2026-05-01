@@ -1,82 +1,50 @@
-export default {
-    async fetch(request, env, ctx) {
-        const url = new URL(request.url);
-        const path = url.pathname;
-        const corsHeaders = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type',
-        };
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>КОИН — кликер</title>
+    <style>
+        body { font-family: system-ui; text-align: center; padding: 50px; background: #7c3aed; color: white; }
+        button { background: #facc15; color: #4c1d95; border: none; padding: 15px 30px; font-size: 20px; border-radius: 40px; cursor: pointer; margin: 10px; }
+        .balance { font-size: 48px; font-weight: bold; margin: 20px; }
+    </style>
+</head>
+<body>
+    <h1>💰 КОИН</h1>
+    <div class="balance" id="balance">0</div>
+    <button id="clickBtn">🧩 КЛИКНУТЬ</button>
+    <p>ID: <span id="userId">-</span></p>
 
-        if (request.method === 'OPTIONS') {
-            return new Response(null, { headers: corsHeaders });
+    <script>
+        const API_URL = 'https://koin-api.gcebotar29.workers.dev';
+        let userId = localStorage.getItem('userId');
+        
+        if (!userId) {
+            userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+            localStorage.setItem('userId', userId);
         }
-
-        // ===== ПОЛУЧИТЬ БАЛАНС =====
-        if (path === '/api/balance' && request.method === 'GET') {
-            const userId = url.searchParams.get('userId');
-            if (!userId) {
-                return new Response(JSON.stringify({ error: 'userId required' }), {
-                    status: 400,
-                    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-                });
-            }
-
-            // Получаем текущий баланс из KV, если нет — создаём 0
-            let balance = await env.KV_NAMESPACE.get(`balance:${userId}`);
-            balance = balance ? parseInt(balance) : 0;
-
-            return new Response(JSON.stringify({ userId: userId, balance: balance }), {
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        
+        document.getElementById('userId').innerText = userId;
+        
+        async function loadBalance() {
+            const res = await fetch(`${API_URL}/api/balance?userId=${userId}`);
+            const data = await res.json();
+            document.getElementById('balance').innerText = data.balance;
+        }
+        
+        async function click() {
+            const res = await fetch(`${API_URL}/api/click`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: userId })
             });
+            const data = await res.json();
+            document.getElementById('balance').innerText = data.balance;
         }
-
-        // ===== КЛИК (УВЕЛИЧЕНИЕ БАЛАНСА) =====
-        if (path === '/api/click' && request.method === 'POST') {
-            const body = await request.json();
-            const userId = body.userId;
-            if (!userId) {
-                return new Response(JSON.stringify({ error: 'userId required' }), {
-                    status: 400,
-                    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-                });
-            }
-
-            // Получаем текущий баланс
-            let balance = await env.KV_NAMESPACE.get(`balance:${userId}`);
-            balance = balance ? parseInt(balance) : 0;
-
-            // Увеличиваем на 1
-            balance = balance + 1;
-
-            // Сохраняем новый баланс
-            await env.KV_NAMESPACE.put(`balance:${userId}`, balance.toString());
-
-            return new Response(JSON.stringify({ userId: userId, balance: balance }), {
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-            });
-        }
-
-        // ===== ГЛАВНАЯ СТРАНИЦА (HTML) =====
-        return new Response(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>KOIN API</title>
-                <meta charset="utf-8">
-                <style>
-                    body { font-family: system-ui; text-align: center; padding: 50px; background: linear-gradient(135deg, #7c3aed, #2563eb); color: white; }
-                    h1 { font-size: 48px; }
-                    .success { background: #10b981; padding: 15px 30px; border-radius: 20px; display: inline-block; margin: 20px 0; }
-                </style>
-            </head>
-            <body>
-                <h1>💰 KOIN API</h1>
-                <div class="success">✅ Сервер работает!</div>
-                <p>Баланс сохраняется, клики начисляются корректно</p>
-                <p>📡 Адрес: ${url.origin}</p>
-            </body>
-            </html>
-        `, { headers: { ...corsHeaders, 'Content-Type': 'text/html' } });
-    }
-};
+        
+        document.getElementById('clickBtn').onclick = click;
+        loadBalance();
+    </script>
+</body>
+</html>
