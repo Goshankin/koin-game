@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Тест связи с сервером</title>
+    <script>
+        const API_URL = 'https://koin-api.gcebotar29.workers.dev';
+
+        async function testBalance() {
+            const userId = 'test_user_' + Date.now();
+            const res = await fetch(`${API_URL}/api/balance?userId=${userId}`);
+            const data = await res.json();
+            document.getElementById('result').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+
+        async function testRegister() {
+            const nickname = 'Тестер_' + Date.now();
+            const password = '123';
+            const avatar = '😀';
+            const res = await fetch(`${API_URL}/api/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tgId: '', nickname, password, avatar })
+            });
+            const data = await res.json();
+            document.getElementById('result').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            if (data.success) {
+                alert(`Регистрация успешна! Ваш ID: ${data.user.tgId}`);
+            } else {
+                alert(`Ошибка: ${data.error}`);
+            }
+        }
+    </script>
+</head>
+<body style="font-family: system-ui; padding: 20px;">
+    <h2>🔍 Тест связи с сервером</h2>
+    <button onclick="testBalance()">1. Проверить баланс (GET /api/balance)</button>
+    <button onclick="testRegister()">2. Проверить регистрацию (POST /api/register)</button>
+    <div id="result" style="margin-top: 20px; background: #f0f0f0; padding: 10px; border-radius: 8px;"></div>
+</body>
+</html>
