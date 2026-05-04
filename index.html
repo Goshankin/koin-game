@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>КОИН — кликер 2.0</title>
+    <title>КОИН — кликер</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body {
@@ -148,7 +148,6 @@
         <div id="registerForm" class="auth-card">
             <div class="card">
                 <h2>📝 РЕГИСТРАЦИЯ</h2>
-                <input type="text" id="regTgId" placeholder="ID (оставьте пустым для авто)">
                 <input type="text" id="regNick" placeholder="Никнейм">
                 <input type="password" id="regPassword" placeholder="Пароль">
                 <div class="avatar-selector" id="avatarSelector"></div>
@@ -243,8 +242,8 @@
             return res.json();
         }
 
-        async function register(tgId, nick, pwd, avatar) {
-            const data = await apiCall('/api/register', { tgId, nickname: nick, password: pwd, avatar });
+        async function register(nickname, password, avatar) {
+            const data = await apiCall('/api/register', { tgId: '', nickname, password, avatar });
             if (data.success) {
                 currentTgId = data.user.tgId;
                 currentUser = data.user;
@@ -264,8 +263,8 @@
             } else { showToast(data.error, true); return false; }
         }
 
-        async function login(tgId, pwd) {
-            const data = await apiCall('/api/login', { tgId, password: pwd });
+        async function login(tgId, password) {
+            const data = await apiCall('/api/login', { tgId, password });
             if (data.success && !data.user.isBanned) {
                 currentTgId = data.user.tgId;
                 currentUser = data.user;
@@ -430,7 +429,7 @@
             const container = document.getElementById('adminPanel');
             if (!container) return;
             if (users.error) { container.innerHTML = 'Ошибка загрузки'; return; }
-            let html = '<table class="admin-table"><tr><th>ID</th><th>Ник</th><th>Баланс</th><th>Gold</th><th>Статус</th><th>Действия</th><tr>';
+            let html = '<table class="admin-table"></tr><th>ID</th><th>Ник</th><th>Баланс</th><th>Gold</th><th>Статус</th><th>Действия</th></tr>';
             users.forEach(u => {
                 let status = '';
                 if (u.isBanned) status = '🔴 Забанен';
@@ -516,4 +515,147 @@
             }
         };
 
-        document.getElementById('changePasswordBtn').onclick = () => document.getElementById('changePasswordModal').style.display
+        document.getElementById('changePasswordBtn').onclick = () => document.getElementById('changePasswordModal').style.display = 'flex';
+        document.getElementById('closeChangePasswordBtn').onclick = () => document.getElementById('changePasswordModal').style.display = 'none';
+        document.getElementById('submitChangePasswordBtn').onclick = async () => {
+            const oldPwd = document.getElementById('oldPassword').value;
+            const newPwd = document.getElementById('newPassword').value;
+            const confirmPwd = document.getElementById('confirmPassword').value;
+            if (!oldPwd || !newPwd || !confirmPwd) { showToast('Заполните все поля', true); return; }
+            if (newPwd !== confirmPwd) { showToast('Новый пароль не совпадает', true); return; }
+            const res = await apiCall('/api/changePassword', { tgId: currentTgId, oldPassword: oldPwd, newPassword: newPwd });
+            if (res.success) { showToast('Пароль изменён'); document.getElementById('changePasswordModal').style.display = 'none'; }
+            else showToast(res.error, true);
+        };
+
+        document.getElementById('lightThemeBtn').onclick = async () => {
+            document.body.classList.remove('dark'); document.body.classList.add('light');
+            await apiCall('/api/updateTheme', { tgId: currentTgId, theme: 'light' });
+        };
+        document.getElementById('darkThemeBtn').onclick = async () => {
+            document.body.classList.remove('light'); document.body.classList.add('dark');
+            await apiCall('/api/updateTheme', { tgId: currentTgId, theme: 'dark' });
+        };
+
+        document.getElementById('transferBtn').onclick = async () => {
+            const toId = document.getElementById('transferTo').value.trim();
+            const amount = parseInt(document.getElementById('transferAmount').value);
+            if (!toId || !amount) { showToast('Введите ID и сумму', true); return; }
+            const data = await apiCall('/api/transfer', { fromTgId: currentTgId, toTgId: toId, amount });
+            if (data.success) { showToast(`✅ Переведено ${amount} коинов пользователю ${data.toName}`); refreshUser(); }
+            else showToast(data.error, true);
+            document.getElementById('transferTo').value = '';
+            document.getElementById('transferAmount').value = '';
+        };
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
+            document.getElementById(`page-${pageId}`).classList.add('active-page');
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.nav-btn[data-page="${pageId}"]`).classList.add('active');
+            if (pageId === 'leaderboard') loadLeaderboard();
+            if (pageId === 'admin' && currentTgId === ADMIN_ID) loadAdminUsers();
+            if (pageId === 'quests') renderQuests();
+            if (pageId === 'streak') renderStreakRewards();
+        }
+        document.querySelectorAll('.nav-btn').forEach(btn => btn.onclick = () => showPage(btn.getAttribute('data-page')));
+
+        // ========== АВАТАРЫ ==========
+        const avatars = ["😀","😎","🦊","🐱","🐶","🐼","🐧","🦄","🍕","🎮","⚽","🎵","📚","💎","🌟","🔥","❤️"];
+        
+        function renderAvatarSelector() {
+            const container = document.getElementById('avatarSelector');
+            if (!container) return;
+            container.innerHTML = '';
+            avatars.forEach(emoji => {
+                const div = document.createElement('div');
+                div.className = 'avatar-option';
+                div.innerText = emoji;
+                div.onclick = () => {
+                    document.querySelectorAll('.avatar-option').forEach(opt => opt.classList.remove('selected'));
+                    div.classList.add('selected');
+                    document.getElementById('registerBtn').setAttribute('data-avatar', emoji);
+                };
+                container.appendChild(div);
+            });
+            const first = container.firstChild;
+            if (first) {
+                first.classList.add('selected');
+                document.getElementById('registerBtn').setAttribute('data-avatar', avatars[0]);
+            }
+        }
+
+        function renderAvatarPicker() {
+            const grid = document.getElementById('avatarGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            avatars.forEach(e => {
+                const div = document.createElement('div');
+                div.innerText = e;
+                div.style.cssText = 'font-size:42px; background:rgba(255,255,255,0.1); border-radius:20px; padding:10px; text-align:center; cursor:pointer;';
+                div.onclick = async () => {
+                    const res = await apiCall('/api/updateAvatar', { tgId: currentTgId, avatar: e });
+                    if (res.success) {
+                        currentUser.avatar = e;
+                        updateUI();
+                        document.getElementById('avatarModal').style.display = 'none';
+                    }
+                };
+                grid.appendChild(div);
+            });
+        }
+
+        document.getElementById('avatarBtn').onclick = () => {
+            renderAvatarPicker();
+            document.getElementById('avatarModal').style.display = 'flex';
+        };
+        document.getElementById('closeAvatarBtn').onclick = () => document.getElementById('avatarModal').style.display = 'none';
+
+        // ========== РЕГИСТРАЦИЯ / ВХОД ==========
+        document.getElementById('registerBtn').onclick = () => {
+            const nick = document.getElementById('regNick').value.trim();
+            const pwd = document.getElementById('regPassword').value;
+            const avatar = document.getElementById('registerBtn').getAttribute('data-avatar') || '🧩';
+            if (!nick || !pwd) { showToast('Заполните ник и пароль', true); return; }
+            register(nick, pwd, avatar);
+        };
+        document.getElementById('loginBtn').onclick = () => {
+            const tgId = document.getElementById('loginTgId').value.trim();
+            const pwd = document.getElementById('loginPassword').value;
+            if (!tgId || !pwd) { showToast('Введите ID и пароль', true); return; }
+            login(tgId, pwd);
+        };
+        document.getElementById('showLoginBtn').onclick = () => {
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+        };
+        document.getElementById('showRegisterBtn').onclick = () => {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+        };
+
+        // пока нет /api/promo, отключаем кнопку
+        // document.getElementById('activateBtn')...
+
+        // Инициализация
+        renderAvatarSelector();
+        const savedTgId = localStorage.getItem('currentTgId');
+        if (savedTgId) {
+            loadUser(savedTgId).then(user => {
+                if (user && !user.isBanned) {
+                    currentUser = user; currentTgId = savedTgId;
+                    document.getElementById('authContainer').style.display = 'none';
+                    document.getElementById('gameContainer').style.display = 'block';
+                    if (currentTgId === ADMIN_ID) document.getElementById('adminNavBtn').style.display = 'block';
+                    if (user.theme === 'light') document.body.classList.add('light');
+                    else if (user.theme === 'dark') document.body.classList.add('dark');
+                    updateUI(); loadLeaderboard(); renderShop(); renderQuests(); renderStreakRewards();
+                    if (currentUser.notifications?.length) currentUser.notifications.forEach(n => showToast(n));
+                    if (updateInterval) clearInterval(updateInterval);
+                    updateInterval = setInterval(() => refreshUser(), 30000);
+                } else logout();
+            }).catch(() => logout());
+        }
+    </script>
+</body>
+</html>
