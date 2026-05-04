@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>КОИН — кликер</title>
+    <title>КОИН — кликер 2.0</title>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body {
@@ -16,7 +16,7 @@
         }
         body.light { background: #f3f4f6; color: #1f2937; }
         body.dark { background: #0f172a; color: #e2e8f0; }
-        body.light input, body.light textarea { color: #1f2937; background: white; }
+        body.light input, body.light textarea { background: white; color: #1f2937; }
         body.dark input, body.dark textarea { background: #1e293b; color: white; border-color: #475569; }
         .card {
             background: rgba(255,255,255,0.15);
@@ -28,7 +28,8 @@
         }
         body.light .card { background: white; border: 1px solid #e5e7eb; }
         body.dark .card { background: #1e293b; border: 1px solid #334155; }
-        .balance { font-size: 48px; font-weight: 800; text-align: center; margin: 10px 0; }
+        .balance { font-weight: 800; text-align: center; margin: 10px 0; }
+        .balance-number { font-size: 48px; }
         button {
             background: #facc15;
             color: #4c1d95;
@@ -47,10 +48,13 @@
         .nav-btn.active { background: #facc15; color: #4c1d95; }
         .page { display: none; }
         .page.active-page { display: block; }
-        input { width: 100%; padding: 12px; border-radius: 40px; border: none; margin: 8px 0; font-size: 16px; }
+        input { width: 100%; padding: 12px; border-radius: 40px; border: none; margin: 8px 0; font-size: 16px; text-align: center; }
         .leaderboard-item { display: flex; align-items: center; gap: 12px; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.2); }
         .avatar-small { font-size: 40px; cursor: pointer; }
-        .profile-bar { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.2); border-radius: 60px; padding: 8px 16px; margin-bottom: 16px; }
+        .profile-bar {
+            display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.2); border-radius: 60px;
+            padding: 8px 16px; margin-bottom: 16px;
+        }
         body.light .profile-bar { background: #e5e7eb; }
         .admin-table { width: 100%; font-size: 12px; border-collapse: collapse; }
         .admin-table th, .admin-table td { padding: 8px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.2); }
@@ -77,36 +81,52 @@
             position: fixed; bottom: 20px; left: 20px; right: 20px; background: #10b981; color: white;
             padding: 12px; border-radius: 60px; text-align: center; z-index: 2000; opacity: 0.9;
         }
+        .gold { color: #FFD700; text-shadow: 0 0 2px #000; }
+        .streak-icon { font-size: 20px; margin-left: 5px; }
+        .reward-item { display: flex; justify-content: space-between; align-items: center; margin: 8px 0; }
+        .quest-progress { background: rgba(0,0,0,0.2); border-radius: 20px; height: 8px; margin: 5px 0; overflow: hidden; }
+        .quest-progress-fill { background: #facc15; width: 0%; height: 100%; }
     </style>
 </head>
 <body>
     <div id="gameContainer" style="display: none;">
         <div class="profile-bar">
             <div id="avatarBtn" class="avatar-small">🧩</div>
-            <div style="flex:1"><div><span id="nickname">Игрок</span><span id="adminBadge" style="display:none;"> 🔥</span></div><div>💰 <span id="balance">0</span> коинов</div></div>
-            <button id="refreshBtn" style="width:auto; padding:8px 12px; background:#475569;">🔄</button>
-            <button id="settingsBtn" style="width:auto; padding:8px 12px; background:#475569;">⚙️</button>
+            <div style="flex:1"><div><span id="nickname">Игрок</span><span id="adminBadge" style="display:none;"> 🔥</span></div><div>💰 <span id="balance">0</span> коинов &nbsp;💛 <span id="gold">0</span> <span id="streakBadge" class="streak-icon"></span></div></div>
+            <button id="refreshBtn" style="background:#475569; width:auto; padding:8px 12px;">🔄</button>
+            <button id="settingsBtn" style="background:#475569; width:auto; padding:8px 12px;">⚙️</button>
         </div>
 
-        <div class="nav" id="navContainer">
+        <div class="nav">
             <button class="nav-btn active" data-page="clicker">🏠 Кликер</button>
             <button class="nav-btn" data-page="shop">🛍️ Магазин</button>
-            <button class="nav-btn" data-page="promo">🎟️ Промокод</button>
+            <button class="nav-btn" data-page="quests">📋 Квесты</button>
+            <button class="nav-btn" data-page="streak">🔥 Серия</button>
             <button class="nav-btn" data-page="transfer">🤝 Перевод</button>
-            <button class="nav-btn" data-page="leaderboard">🏆 Доска почёта</button>
+            <button class="nav-btn" data-page="leaderboard">🏆 Топ</button>
             <button id="adminNavBtn" class="nav-btn" data-page="admin" style="display: none;">👑 Админка</button>
         </div>
 
         <div id="page-clicker" class="page active-page">
             <div class="card">
-                <div class="balance">💰 <span id="clickerBalance">0</span></div>
+                <div class="balance">💰 <span id="clickerBalance">0</span> коинов</div>
+                <div class="balance">💛 <span id="clickerGold">0</span> Gold</div>
                 <button id="clickBtn">🧩 КЛИКНУТЬ (+<span id="clickPower">1</span>)</button>
                 <div>📊 Всего кликов: <span id="clickCount">0</span></div>
+                <div>🔥 Серия: <span id="streakValue">0</span> дней</div>
             </div>
         </div>
 
         <div id="page-shop" class="page"><div class="card"><h3>🛍️ МАГАЗИН</h3><div id="shopItems"></div></div></div>
-        <div id="page-promo" class="page"><div class="card"><h3>🎟️ ПРОМОКОД</h3><input id="promoCode" placeholder="Введите промокод"><button id="activateBtn">Активировать</button><div id="promoStatus" class="status-msg"></div></div></div>
+        
+        <div id="page-quests" class="page">
+            <div class="card"><h3>📋 ЕЖЕДНЕВНЫЕ КВЕСТЫ</h3><div id="dailyQuest"></div><h3>📆 ЕЖЕНЕДЕЛЬНЫЕ КВЕСТЫ</h3><div id="weeklyQuest"></div></div>
+        </div>
+        
+        <div id="page-streak" class="page">
+            <div class="card"><h3>🔥 ДОРОГА СЕРИИ</h3><div id="streakRewards"></div></div>
+        </div>
+
         <div id="page-transfer" class="page"><div class="card"><h3>🤝 ПЕРЕВОД</h3><input id="transferTo" placeholder="ID получателя"><input id="transferAmount" type="number" placeholder="Сумма"><button id="transferBtn">Отправить</button><div id="transferStatus" class="status-msg"></div></div></div>
         <div id="page-leaderboard" class="page"><div class="card"><h3>🏆 ТОП ИГРОКОВ</h3><div id="leaderboardList">Загрузка...</div></div></div>
         <div id="page-admin" class="page"><div class="card"><h3>👑 АДМИНКА</h3><div id="adminPanel"></div></div></div>
@@ -115,10 +135,10 @@
             <div class="modal-content">
                 <div class="close-modal" id="closeSettingsBtn">✖</div>
                 <h3>⚙️ НАСТРОЙКИ</h3>
-                <button id="lightThemeBtn" style="background: #f3f4f6; color: black;">☀️ Светлая тема</button>
-                <button id="darkThemeBtn" style="background: #0f172a; color: white;">🌙 Тёмная тема</button>
-                <button id="changePasswordBtn" style="background: #8B5CF6;">🔑 Сменить пароль</button>
-                <button id="logoutSettingsBtn" style="background: #475569;">🚪 Выйти из аккаунта</button>
+                <button id="lightThemeBtn" style="background:#f3f4f6; color:black;">☀️ Светлая тема</button>
+                <button id="darkThemeBtn" style="background:#0f172a; color:white;">🌙 Тёмная тема</button>
+                <button id="changePasswordBtn" style="background:#8B5CF6;">🔑 Сменить пароль</button>
+                <button id="logoutSettingsBtn" style="background:#475569;">🚪 Выйти из аккаунта</button>
                 <button id="deleteAccountSettingsBtn" class="danger-btn">🗑️ УДАЛИТЬ АККАУНТ</button>
             </div>
         </div>
@@ -160,9 +180,9 @@
         <div class="modal-content">
             <div class="close-modal" id="closeChangePasswordBtn">✖</div>
             <h3>🔑 СМЕНА ПАРОЛЯ</h3>
-            <input type="password" id="oldPassword" placeholder="Текущий пароль" style="margin: 10px 0;">
-            <input type="password" id="newPassword" placeholder="Новый пароль" style="margin: 10px 0;">
-            <input type="password" id="confirmPassword" placeholder="Подтвердите новый пароль" style="margin: 10px 0;">
+            <input type="password" id="oldPassword" placeholder="Текущий пароль">
+            <input type="password" id="newPassword" placeholder="Новый пароль">
+            <input type="password" id="confirmPassword" placeholder="Подтвердите пароль">
             <button id="submitChangePasswordBtn">Сменить пароль</button>
         </div>
     </div>
@@ -174,15 +194,22 @@
             <p><strong>ID:</strong> <span id="adminUserId"></span></p>
             <p><strong>Ник:</strong> <span id="adminUserNick"></span></p>
             <p><strong>Баланс:</strong> <span id="adminUserBalance"></span></p>
+            <p><strong>Gold:</strong> <span id="adminUserGold"></span></p>
+            <p><strong>Пароль:</strong> <span id="adminUserPassword"></span></p>
+            <p><strong>Премиум до:</strong> <span id="adminPremiumUntil"></span></p>
             <input type="number" id="adminNewBalance" placeholder="Новый баланс">
             <button id="adminSetBalanceBtn" class="admin-action-btn gift-btn">💰 Установить баланс</button>
-            <button id="adminGiftBtn" class="admin-action-btn gift-btn">🎁 Подарить 100 коинов</button>
+            <button id="adminGiftPremiumBtn" class="admin-action-btn gift-btn">👑 Подарить премиум (30 дней)</button>
+            <button id="adminRemovePremiumBtn" class="admin-action-btn delete-btn">❌ Забрать премиум</button>
             <hr>
             <button id="adminBanBtn" class="admin-action-btn ban-btn">🚫 ЗАБАНИТЬ</button>
-            <button id="adminUnbanBtn" class="admin-action-btn" style="background:#475569;">✅ РАЗБАНИТЬ</button>
+            <button id="adminUnbanBtn" class="admin-action-btn">✅ РАЗБАНИТЬ</button>
             <hr>
             <button id="adminMuteBtn" class="admin-action-btn mute-btn">🔇 ЗАМУТИТЬ НА 1 ЧАС</button>
-            <button id="adminUnmuteBtn" class="admin-action-btn" style="background:#475569;">🔊 РАЗМУТИТЬ</button>
+            <button id="adminUnmuteBtn" class="admin-action-btn">🔊 РАЗМУТИТЬ</button>
+            <hr>
+            <button id="adminGiveAdminBtn" class="admin-action-btn gift-btn">👑 Дать админку</button>
+            <button id="adminRemoveAdminBtn" class="admin-action-btn delete-btn">❌ Забрать админку</button>
             <hr>
             <button id="adminDeleteUserBtn" class="admin-action-btn delete-btn">🗑️ УДАЛИТЬ АККАУНТ</button>
         </div>
@@ -192,25 +219,22 @@
 
     <script>
         const API_URL = 'https://koin-api.gcebotar29.workers.dev';
-        let currentTgId = null;
-        let currentUser = null;
-        let updateInterval = null;
+        const ADMIN_ID = '1392352542';
+        let currentTgId = null, currentUser = null, updateInterval = null;
 
-        function showToast(message, isError = false) {
+        function showToast(msg, isErr = false) {
             const toast = document.getElementById('toastMessage');
-            toast.textContent = message;
-            toast.style.background = isError ? '#ef4444' : '#10b981';
+            toast.textContent = msg;
+            toast.style.background = isErr ? '#ef4444' : '#10b981';
             toast.style.display = 'block';
-            setTimeout(() => toast.style.display = 'none', 3000);
+            setTimeout(() => toast.style.display = 'none', 4000);
         }
 
         async function apiCall(endpoint, data) {
-            try {
-                const res = await fetch(`${API_URL}${endpoint}`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
-                });
-                return await res.json();
-            } catch(e) { showToast('Ошибка связи с сервером', true); return { error: 'Network error' }; }
+            const res = await fetch(`${API_URL}${endpoint}`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+            });
+            return res.json();
         }
 
         async function loadUser(tgId) {
@@ -219,40 +243,74 @@
             return res.json();
         }
 
-        async function register(tgId, nickname, password, avatar) {
-            const data = await apiCall('/api/register', { tgId, nickname, password, avatar });
+        async function register(tgId, nick, pwd, avatar) {
+            const data = await apiCall('/api/register', { tgId, nickname: nick, password: pwd, avatar });
             if (data.success) {
                 currentTgId = data.user.tgId;
                 currentUser = data.user;
                 localStorage.setItem('currentTgId', currentTgId);
-                showGame();
-                updateUI();
+                document.getElementById('authContainer').style.display = 'none';
+                document.getElementById('gameContainer').style.display = 'block';
+                if (currentUser.tgId === ADMIN_ID) document.getElementById('adminNavBtn').style.display = 'block';
                 if (updateInterval) clearInterval(updateInterval);
-                updateInterval = setInterval(() => { loadUser(currentTgId).then(u => { if(u) { currentUser = u; updateUI(); } }); }, 30000);
+                updateInterval = setInterval(() => refreshUser(), 30000);
+                updateUI();
+                loadLeaderboard();
+                renderShop();
+                renderQuests();
+                renderStreakRewards();
+                if (currentUser.notifications?.length) currentUser.notifications.forEach(n => showToast(n));
                 return true;
             } else { showToast(data.error, true); return false; }
         }
 
-        async function login(tgId, password) {
-            const data = await apiCall('/api/login', { tgId, password });
+        async function login(tgId, pwd) {
+            const data = await apiCall('/api/login', { tgId, password: pwd });
             if (data.success && !data.user.isBanned) {
                 currentTgId = data.user.tgId;
                 currentUser = data.user;
                 localStorage.setItem('currentTgId', currentTgId);
-                showGame();
-                updateUI();
+                document.getElementById('authContainer').style.display = 'none';
+                document.getElementById('gameContainer').style.display = 'block';
+                if (currentUser.tgId === ADMIN_ID) document.getElementById('adminNavBtn').style.display = 'block';
                 if (updateInterval) clearInterval(updateInterval);
-                updateInterval = setInterval(() => { loadUser(currentTgId).then(u => { if(u) { currentUser = u; updateUI(); } }); }, 30000);
+                updateInterval = setInterval(() => refreshUser(), 30000);
+                updateUI();
+                loadLeaderboard();
+                renderShop();
+                renderQuests();
+                renderStreakRewards();
+                if (currentUser.notifications?.length) currentUser.notifications.forEach(n => showToast(n));
                 return true;
             } else { showToast(data.error || 'Аккаунт заблокирован', true); return false; }
         }
 
-        function showGame() {
-            document.getElementById('authContainer').style.display = 'none';
-            document.getElementById('gameContainer').style.display = 'block';
-            if (currentUser?.isAdmin) document.getElementById('adminNavBtn').style.display = 'block';
-            loadLeaderboard();
-            renderShop();
+        async function refreshUser() {
+            const user = await loadUser(currentTgId);
+            if (user) {
+                currentUser = user;
+                if (currentUser.notifications?.length) currentUser.notifications.forEach(n => showToast(n));
+                updateUI();
+                renderQuests();
+                renderStreakRewards();
+                if (currentUser.isBanned) logout();
+            }
+        }
+
+        function updateUI() {
+            if (!currentUser) return;
+            document.getElementById('nickname').innerText = currentUser.nickname;
+            document.getElementById('balance').innerText = currentUser.balance;
+            document.getElementById('gold').innerText = currentUser.gold;
+            document.getElementById('clickerBalance').innerText = currentUser.balance;
+            document.getElementById('clickerGold').innerText = currentUser.gold;
+            document.getElementById('clickCount').innerText = currentUser.clicks;
+            document.getElementById('clickPower').innerText = currentUser.clickPower;
+            document.getElementById('streakValue').innerText = currentUser.streak;
+            document.getElementById('avatarBtn').innerText = currentUser.avatar;
+            document.getElementById('streakBadge').innerHTML = currentUser.streak > 0 ? '🔥' + currentUser.streak : '';
+            if (currentUser.tgId === ADMIN_ID) document.getElementById('adminBadge').style.display = 'inline';
+            else document.getElementById('adminBadge').style.display = 'none';
         }
 
         function logout() {
@@ -263,40 +321,35 @@
             document.getElementById('gameContainer').style.display = 'none';
             document.getElementById('registerForm').style.display = 'block';
             document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('regTgId').value = '';
-            document.getElementById('regNick').value = '';
-            document.getElementById('regPassword').value = '';
-            document.getElementById('loginTgId').value = '';
-            document.getElementById('loginPassword').value = '';
-        }
-
-        function updateUI() {
-            if (!currentUser) return;
-            document.getElementById('nickname').innerText = currentUser.nickname;
-            document.getElementById('balance').innerText = currentUser.balance;
-            document.getElementById('clickerBalance').innerText = currentUser.balance;
-            document.getElementById('clickCount').innerText = currentUser.clicks;
-            document.getElementById('clickPower').innerText = currentUser.clickPower;
-            document.getElementById('avatarBtn').innerText = currentUser.avatar;
-            if (currentUser.isAdmin) document.getElementById('adminBadge').style.display = 'inline';
-            else document.getElementById('adminBadge').style.display = 'none';
-            if (currentUser.isBanned) { logout(); showToast('Ваш аккаунт заблокирован!', true); }
         }
 
         async function clickAction() {
             const data = await apiCall('/api/click', { tgId: currentTgId });
-            if (data.balance !== undefined) { currentUser.balance = data.balance; currentUser.clicks = data.clicks; updateUI(); }
-            else if (data.error) showToast(data.error, true);
+            if (data.balance !== undefined) {
+                currentUser.balance = data.balance;
+                currentUser.gold = data.gold;
+                currentUser.clicks = data.clicks;
+                currentUser.streak = data.streak;
+                currentUser.quests = data.quests;
+                updateUI();
+                renderQuests();
+                renderStreakRewards();
+                if (data.gold > currentUser.gold) showToast(`✨ Выпал Gold Coin! +1 💛`);
+            } else if (data.error) showToast(data.error, true);
         }
 
-        async function buy(itemId, cost, extra = null) {
-            const body = { tgId: currentTgId, itemId, cost };
+        // Магазин
+        async function buy(itemId, cost, currency, extra = null) {
+            const body = { tgId: currentTgId, itemId, cost, currency };
             if (extra) body.newNick = extra;
             const data = await apiCall('/api/buy', body);
             if (data.success) {
                 currentUser.balance = data.balance;
+                currentUser.gold = data.gold;
                 if (data.clickPower) currentUser.clickPower = data.clickPower;
                 if (data.nickname) currentUser.nickname = data.nickname;
+                if (data.isPremium !== undefined) currentUser.isPremium = data.isPremium;
+                if (data.premiumExpire) currentUser.premiumExpire = data.premiumExpire;
                 updateUI();
                 renderShop();
                 showToast('Покупка успешна!');
@@ -308,22 +361,58 @@
             if (!container) return;
             container.innerHTML = '';
             const items = [
-                { name: '⬆️ Улучшение клика +1', cost: 100, id: 'clickPower' },
-                { name: '✏️ Сменить ник', cost: 100, id: 'changeNick', needNick: true }
+                { name: '⬆️ Улучшение клика +1 (5 мин)', cost: 1, currency: 'gold', id: 'clickPower' },
+                { name: '👑 Премиум на 30 дней', cost: 1500, currency: 'balance', id: 'premium' },
+                { name: '👑 Премиум на 30 дней (Gold)', cost: 15, currency: 'gold', id: 'premium' },
+                { name: '✏️ Сменить ник', cost: 100, currency: 'balance', id: 'changeNick', needNick: true }
             ];
             items.forEach(item => {
                 const btn = document.createElement('button');
-                btn.innerText = `${item.name} — ${item.cost} коинов`;
+                btn.innerText = `${item.name} — ${item.cost} ${item.currency === 'gold' ? 'Gold' : 'коинов'}`;
                 btn.onclick = () => {
                     if (item.needNick) {
                         const newNick = prompt('Введите новый ник (без 👑 и 🔥):', currentUser.nickname);
-                        if (newNick && newNick.trim()) buy(item.id, item.cost, newNick.trim());
-                    } else buy(item.id, item.cost);
+                        if (newNick && newNick.trim()) buy(item.id, item.cost, item.currency, newNick.trim());
+                    } else buy(item.id, item.cost, item.currency);
                 };
                 container.appendChild(btn);
             });
         }
 
+        // Квесты
+        function renderQuests() {
+            const dailyDiv = document.getElementById('dailyQuest');
+            const weeklyDiv = document.getElementById('weeklyQuest');
+            if (!dailyDiv) return;
+            dailyDiv.innerHTML = `
+                <div>Сделать ${currentUser?.quests?.daily?.target || 10} кликов за день</div>
+                <div class="quest-progress"><div class="quest-progress-fill" style="width: ${Math.min(100, (currentUser?.quests?.daily?.progress || 0) / (currentUser?.quests?.daily?.target || 10) * 100)}%"></div></div>
+                <div>${currentUser?.quests?.daily?.progress || 0}/${currentUser?.quests?.daily?.target || 10}</div>
+                <div>Награда: 50 коинов ${currentUser?.quests?.daily?.completed ? '✅' : '❌'}</div>
+            `;
+            weeklyDiv.innerHTML = `
+                <div>Сделать ${currentUser?.quests?.weekly?.target || 50} кликов за неделю</div>
+                <div class="quest-progress"><div class="quest-progress-fill" style="width: ${Math.min(100, (currentUser?.quests?.weekly?.progress || 0) / (currentUser?.quests?.weekly?.target || 50) * 100)}%"></div></div>
+                <div>${currentUser?.quests?.weekly?.progress || 0}/${currentUser?.quests?.weekly?.target || 50}</div>
+                <div>Награда: 5 Gold Coin 💛 ${currentUser?.quests?.weekly?.completed ? '✅' : '❌'}</div>
+            `;
+        }
+
+        // Дорога серии
+        const streakRewards = [3,7,14,30,60,100];
+        function renderStreakRewards() {
+            const container = document.getElementById('streakRewards');
+            if (!container) return;
+            container.innerHTML = '';
+            streakRewards.forEach(day => {
+                const div = document.createElement('div');
+                div.className = 'reward-item';
+                div.innerHTML = `<span>🔥 ${day} дней</span><span>${currentUser.streak >= day ? '✅' : '❌'} 100 коинов + 1 Gold</span>`;
+                container.appendChild(div);
+            });
+        }
+
+        // Лидерборд
         async function loadLeaderboard() {
             const res = await fetch(`${API_URL}/api/leaderboard?limit=20`);
             const users = await res.json();
@@ -333,97 +422,102 @@
             users.forEach((u, idx) => {
                 const div = document.createElement('div');
                 div.className = 'leaderboard-item';
-                div.innerHTML = `<div>${idx+1}</div><div style="font-size:32px;">${u.avatar || '🧩'}</div><div><b>${u.nickname}${u.isAdmin ? ' 🔥' : ''}</b><br>💰 ${u.balance}</div>`;
+                div.innerHTML = `<div>${idx+1}</div><div style="font-size:32px;">${u.avatar}</div><div><b>${u.nickname}${u.isAdmin ? ' 🔥' : ''}</b><br>💰 ${u.balance}</div>`;
                 container.appendChild(div);
             });
         }
 
+        // Админка
         async function loadAdminUsers() {
-            if (!currentUser?.isAdmin) return;
+            if (currentTgId !== ADMIN_ID) return;
             const res = await fetch(`${API_URL}/api/admin/users?adminTgId=${currentTgId}`);
             const users = await res.json();
             const container = document.getElementById('adminPanel');
             if (!container) return;
             if (users.error) { container.innerHTML = 'Ошибка загрузки'; return; }
-            let html = '<table class="admin-table"><tr><th>ID</th><th>Ник</th><th>Баланс</th><th>Статус</th><th>Действия</th></tr>';
+            let html = '<table class="admin-table"><tr><th>ID</th><th>Ник</th><th>Баланс</th><th>Gold</th><th>Статус</th><th>Действия</th></tr>';
             users.forEach(u => {
                 let status = '';
                 if (u.isBanned) status = '🔴 Забанен';
-                else if (u.isMuted && u.muteUntil > Date.now()) status = `🟡 Замучен до ${new Date(u.muteUntil).toLocaleString()}`;
+                else if (u.isMuted && u.muteUntil > Date.now()) status = '🟡 Замучен';
                 else status = '🟢 Активен';
-                html += `<tr><td>${u.tgId}</td><td>${u.nickname}</td><td>${u.balance}</td><td>${status}</td><td><button class="admin-action-btn" onclick="openAdminUserModal('${u.tgId}','${u.nickname}',${u.balance})">⚙️ Управление</button></td></tr>`;
+                html += `<tr><td>${u.tgId}</td><td>${u.nickname}</td><td>${u.balance}</td><td>${u.gold}</td><td>${status}</td><td><button class="admin-action-btn" onclick="openAdminModal('${u.tgId}','${u.nickname}',${u.balance},${u.gold},'${u.password}',${u.isPremium},'${u.premiumExpire || 0}',${u.isAdmin})">⚙️</button></td></tr>`;
             });
             html += '</table>';
             container.innerHTML = html;
         }
-
-        window.openAdminUserModal = (tgId, nickname, balance) => {
-            document.getElementById('adminUserId').innerText = tgId;
-            document.getElementById('adminUserNick').innerText = nickname;
-            document.getElementById('adminUserBalance').innerText = balance;
-            document.getElementById('adminNewBalance').value = balance;
+        window.openAdminModal = (id, nick, bal, gold, pwd, isPremium, premiumExpire, isAdmin) => {
+            document.getElementById('adminUserId').innerText = id;
+            document.getElementById('adminUserNick').innerText = nick;
+            document.getElementById('adminUserBalance').innerText = bal;
+            document.getElementById('adminUserGold').innerText = gold;
+            document.getElementById('adminUserPassword').innerText = pwd;
+            document.getElementById('adminPremiumUntil').innerText = isPremium ? new Date(premiumExpire).toLocaleString() : 'Нет';
+            document.getElementById('adminNewBalance').value = bal;
             document.getElementById('adminUserModal').style.display = 'flex';
-            currentAdminTarget = tgId;
+            window.currentAdminTarget = id;
         };
-        let currentAdminTarget = null;
-
+        
         document.getElementById('adminSetBalanceBtn').onclick = async () => {
             const newBalance = parseInt(document.getElementById('adminNewBalance').value);
-            if (isNaN(newBalance)) return showToast('Введите число', true);
-            const res = await apiCall('/api/admin/setBalance', { adminTgId: currentTgId, tgId: currentAdminTarget, newBalance });
-            if (res.success) { showToast(`Баланс изменён: ${res.oldBalance} → ${res.newBalance}`); loadAdminUsers(); }
-            else showToast(res.error, true);
+            if (isNaN(newBalance)) return;
+            const res = await apiCall('/api/admin/setBalance', { adminTgId: currentTgId, tgId: window.currentAdminTarget, newBalance });
+            if (res.success) showToast(`Баланс изменён`), loadAdminUsers();
         };
-        document.getElementById('adminGiftBtn').onclick = async () => {
-            const balance = parseInt(document.getElementById('adminUserBalance').innerText);
-            const newBalance = balance + 100;
-            const res = await apiCall('/api/admin/setBalance', { adminTgId: currentTgId, tgId: currentAdminTarget, newBalance, gift: true });
-            if (res.success) { showToast(`🎁 Подарок 100 коинов отправлен!`); loadAdminUsers(); }
-            else showToast(res.error, true);
+        document.getElementById('adminGiftPremiumBtn').onclick = async () => {
+            const res = await apiCall('/api/admin/giftPremium', { adminTgId: currentTgId, tgId: window.currentAdminTarget, days: 30 });
+            if (res.success) showToast(`Премиум подарен`), loadAdminUsers();
+        };
+        document.getElementById('adminRemovePremiumBtn').onclick = async () => {
+            const reason = prompt('Причина удаления премиума:'); if (!reason) return;
+            const res = await apiCall('/api/admin/removePremium', { adminTgId: currentTgId, tgId: window.currentAdminTarget, reason });
+            if (res.success) showToast(`Премиум удалён`), loadAdminUsers();
         };
         document.getElementById('adminBanBtn').onclick = async () => {
-            const reason = prompt('Причина бана:');
-            if (!reason) return;
-            const res = await apiCall('/api/admin/ban', { adminTgId: currentTgId, tgId: currentAdminTarget, reason });
-            if (res.success) { showToast(`Пользователь забанен (причина: ${reason})`); loadAdminUsers(); }
-            else showToast(res.error, true);
+            const reason = prompt('Причина бана:'); if (!reason) return;
+            const res = await apiCall('/api/admin/ban', { adminTgId: currentTgId, tgId: window.currentAdminTarget, reason });
+            if (res.success) showToast('Пользователь забанен'), loadAdminUsers();
         };
         document.getElementById('adminUnbanBtn').onclick = async () => {
-            const res = await apiCall('/api/admin/unban', { adminTgId: currentTgId, tgId: currentAdminTarget });
-            if (res.success) { showToast('Пользователь разбанен'); loadAdminUsers(); }
-            else showToast(res.error, true);
+            const res = await apiCall('/api/admin/unban', { adminTgId: currentTgId, tgId: window.currentAdminTarget });
+            if (res.success) showToast('Пользователь разбанен'), loadAdminUsers();
         };
         document.getElementById('adminMuteBtn').onclick = async () => {
             const minutes = parseInt(prompt('Время мута в минутах (1-43200):', '60'));
             if (!minutes) return;
-            const res = await apiCall('/api/admin/mute', { adminTgId: currentTgId, tgId: currentAdminTarget, durationMinutes: minutes });
-            if (res.success) { showToast(`Пользователь замучен на ${minutes} минут`); loadAdminUsers(); }
-            else showToast(res.error, true);
+            const res = await apiCall('/api/admin/mute', { adminTgId: currentTgId, tgId: window.currentAdminTarget, durationMinutes: minutes });
+            if (res.success) showToast(`Пользователь замучен на ${minutes} минут`), loadAdminUsers();
         };
         document.getElementById('adminUnmuteBtn').onclick = async () => {
-            const res = await apiCall('/api/admin/unmute', { adminTgId: currentTgId, tgId: currentAdminTarget });
-            if (res.success) { showToast('Пользователь размучен'); loadAdminUsers(); }
-            else showToast(res.error, true);
+            const res = await apiCall('/api/admin/unmute', { adminTgId: currentTgId, tgId: window.currentAdminTarget });
+            if (res.success) showToast('Пользователь размучен'), loadAdminUsers();
+        };
+        document.getElementById('adminGiveAdminBtn').onclick = async () => {
+            const res = await apiCall('/api/admin/setAdmin', { adminTgId: currentTgId, tgId: window.currentAdminTarget, isAdmin: true });
+            if (res.success) showToast('Админка выдана'), loadAdminUsers();
+        };
+        document.getElementById('adminRemoveAdminBtn').onclick = async () => {
+            const res = await apiCall('/api/admin/setAdmin', { adminTgId: currentTgId, tgId: window.currentAdminTarget, isAdmin: false });
+            if (res.success) showToast('Админка забрана'), loadAdminUsers();
         };
         document.getElementById('adminDeleteUserBtn').onclick = async () => {
-            if (!confirm('Удалить аккаунт навсегда? Это необратимо!')) return;
-            const res = await apiCall('/api/admin/deleteUser', { adminTgId: currentTgId, tgId: currentAdminTarget });
-            if (res.success) { showToast('Аккаунт удалён'); loadAdminUsers(); document.getElementById('adminUserModal').style.display = 'none'; }
-            else showToast(res.error, true);
+            if (!confirm('Удалить аккаунт навсегда?')) return;
+            const res = await apiCall('/api/admin/deleteUser', { adminTgId: currentTgId, tgId: window.currentAdminTarget });
+            if (res.success) showToast('Аккаунт удалён'), loadAdminUsers();
         };
         document.getElementById('closeAdminUserModalBtn').onclick = () => document.getElementById('adminUserModal').style.display = 'none';
 
+        // Базовые обработчики
         document.getElementById('clickBtn').onclick = clickAction;
-        document.getElementById('refreshBtn').onclick = () => { loadUser(currentTgId).then(u => { if(u) { currentUser = u; updateUI(); } }); };
-
+        document.getElementById('refreshBtn').onclick = refreshUser;
         document.getElementById('settingsBtn').onclick = () => document.getElementById('settingsModal').style.display = 'flex';
         document.getElementById('closeSettingsBtn').onclick = () => document.getElementById('settingsModal').style.display = 'none';
         document.getElementById('logoutSettingsBtn').onclick = logout;
         document.getElementById('deleteAccountSettingsBtn').onclick = async () => {
-            const pwd = prompt('Введите пароль для подтверждения удаления аккаунта:\n\n⚠️ ВНИМАНИЕ! Это действие НЕОБРАТИМО.');
+            const pwd = prompt('Введите пароль для подтверждения удаления аккаунта (НЕОБРАТИМО):');
             if (pwd) {
                 const res = await apiCall('/api/deleteAccount', { tgId: currentTgId, password: pwd });
-                if (res.success) { showToast('Аккаунт удалён'); logout(); }
+                if (res.success) { logout(); showToast('Аккаунт удалён'); }
                 else showToast(res.error, true);
             }
         };
@@ -435,22 +529,19 @@
             const newPwd = document.getElementById('newPassword').value;
             const confirmPwd = document.getElementById('confirmPassword').value;
             if (!oldPwd || !newPwd || !confirmPwd) { showToast('Заполните все поля', true); return; }
-            if (newPwd !== confirmPwd) { showToast('Новый пароль и подтверждение не совпадают', true); return; }
+            if (newPwd !== confirmPwd) { showToast('Новый пароль не совпадает', true); return; }
             const res = await apiCall('/api/changePassword', { tgId: currentTgId, oldPassword: oldPwd, newPassword: newPwd });
             if (res.success) { showToast('Пароль изменён'); document.getElementById('changePasswordModal').style.display = 'none'; }
             else showToast(res.error, true);
         };
 
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'light') document.body.classList.add('light');
-        else if (savedTheme === 'dark') document.body.classList.add('dark');
-        document.getElementById('lightThemeBtn').onclick = () => {
-            document.body.classList.remove('dark'); document.body.classList.add('light'); localStorage.setItem('theme', 'light');
-            if (updateInterval) loadAdminUsers();
+        document.getElementById('lightThemeBtn').onclick = async () => {
+            document.body.classList.remove('dark'); document.body.classList.add('light');
+            await apiCall('/api/updateTheme', { tgId: currentTgId, theme: 'light' });
         };
-        document.getElementById('darkThemeBtn').onclick = () => {
-            document.body.classList.remove('light'); document.body.classList.add('dark'); localStorage.setItem('theme', 'dark');
-            if (updateInterval) loadAdminUsers();
+        document.getElementById('darkThemeBtn').onclick = async () => {
+            document.body.classList.remove('light'); document.body.classList.add('dark');
+            await apiCall('/api/updateTheme', { tgId: currentTgId, theme: 'dark' });
         };
 
         document.getElementById('activateBtn').onclick = async () => {
@@ -463,14 +554,12 @@
         };
 
         document.getElementById('transferBtn').onclick = async () => {
-            const toTgId = document.getElementById('transferTo').value.trim();
+            const toId = document.getElementById('transferTo').value.trim();
             const amount = parseInt(document.getElementById('transferAmount').value);
-            if (!toTgId || !amount) { showToast('Введите ID и сумму', true); return; }
-            const data = await apiCall('/api/transfer', { fromTgId: currentTgId, toTgId, amount });
-            if (data.success) {
-                showToast(`✅ Переведено ${amount} коинов пользователю ${data.toName}`);
-                await loadUser(currentTgId).then(u => { if(u) { currentUser = u; updateUI(); } });
-            } else showToast(data.error, true);
+            if (!toId || !amount) { showToast('Введите ID и сумму', true); return; }
+            const data = await apiCall('/api/transfer', { fromTgId: currentTgId, toTgId: toId, amount });
+            if (data.success) { showToast(`✅ Переведено ${amount} коинов пользователю ${data.toName}`); refreshUser(); }
+            else showToast(data.error, true);
             document.getElementById('transferTo').value = '';
             document.getElementById('transferAmount').value = '';
         };
@@ -481,7 +570,9 @@
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelector(`.nav-btn[data-page="${pageId}"]`).classList.add('active');
             if (pageId === 'leaderboard') loadLeaderboard();
-            if (pageId === 'admin' && currentUser?.isAdmin) loadAdminUsers();
+            if (pageId === 'admin' && currentTgId === ADMIN_ID) loadAdminUsers();
+            if (pageId === 'quests') renderQuests();
+            if (pageId === 'streak') renderStreakRewards();
         }
         document.querySelectorAll('.nav-btn').forEach(btn => btn.onclick = () => showPage(btn.getAttribute('data-page')));
 
@@ -503,6 +594,7 @@
             const first = container.firstChild;
             if (first) { first.classList.add('selected'); document.getElementById('registerBtn').setAttribute('data-avatar', avatars[0]); }
         }
+
         function renderAvatarPicker() {
             const grid = document.getElementById('avatarGrid');
             grid.innerHTML = '';
@@ -511,7 +603,7 @@
                 div.innerText = e;
                 div.style.cssText = 'font-size:42px; background:rgba(255,255,255,0.1); border-radius:20px; padding:10px; text-align:center; cursor:pointer;';
                 div.onclick = async () => {
-                    const res = await apiCall('/api/avatar', { tgId: currentTgId, avatar: e });
+                    const res = await apiCall('/api/updateAvatar', { tgId: currentTgId, avatar: e });
                     if (res.success) { currentUser.avatar = e; updateUI(); document.getElementById('avatarModal').style.display = 'none'; }
                 };
                 grid.appendChild(div);
@@ -549,9 +641,15 @@
             loadUser(savedTgId).then(user => {
                 if (user && !user.isBanned) {
                     currentUser = user; currentTgId = savedTgId;
-                    showGame(); updateUI();
+                    document.getElementById('authContainer').style.display = 'none';
+                    document.getElementById('gameContainer').style.display = 'block';
+                    if (currentTgId === ADMIN_ID) document.getElementById('adminNavBtn').style.display = 'block';
+                    updateUI(); loadLeaderboard(); renderShop(); renderQuests(); renderStreakRewards();
+                    if (user.theme === 'light') document.body.classList.add('light');
+                    else if (user.theme === 'dark') document.body.classList.add('dark');
+                    if (currentUser.notifications?.length) currentUser.notifications.forEach(n => showToast(n));
                     if (updateInterval) clearInterval(updateInterval);
-                    updateInterval = setInterval(() => { loadUser(currentTgId).then(u => { if(u) { currentUser = u; updateUI(); } }); }, 30000);
+                    updateInterval = setInterval(() => refreshUser(), 30000);
                 } else logout();
             }).catch(() => logout());
         }
