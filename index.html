@@ -338,7 +338,6 @@
             } else if (data.error) showToast(data.error, true);
         }
 
-        // Магазин
         async function buy(itemId, cost, currency, extra = null) {
             const body = { tgId: currentTgId, itemId, cost, currency };
             if (extra) body.newNick = extra;
@@ -379,7 +378,6 @@
             });
         }
 
-        // Квесты
         function renderQuests() {
             const dailyDiv = document.getElementById('dailyQuest');
             const weeklyDiv = document.getElementById('weeklyQuest');
@@ -398,7 +396,6 @@
             `;
         }
 
-        // Дорога серии
         const streakRewards = [3,7,14,30,60,100];
         function renderStreakRewards() {
             const container = document.getElementById('streakRewards');
@@ -412,7 +409,6 @@
             });
         }
 
-        // Лидерборд
         async function loadLeaderboard() {
             const res = await fetch(`${API_URL}/api/leaderboard?limit=20`);
             const users = await res.json();
@@ -427,7 +423,6 @@
             });
         }
 
-        // Админка
         async function loadAdminUsers() {
             if (currentTgId !== ADMIN_ID) return;
             const res = await fetch(`${API_URL}/api/admin/users?adminTgId=${currentTgId}`);
@@ -435,7 +430,7 @@
             const container = document.getElementById('adminPanel');
             if (!container) return;
             if (users.error) { container.innerHTML = 'Ошибка загрузки'; return; }
-            let html = '<table class="admin-table"><tr><th>ID</th><th>Ник</th><th>Баланс</th><th>Gold</th><th>Статус</th><th>Действия</th></tr>';
+            let html = '<table class="admin-table"><tr><th>ID</th><th>Ник</th><th>Баланс</th><th>Gold</th><th>Статус</th><th>Действия</th><tr>';
             users.forEach(u => {
                 let status = '';
                 if (u.isBanned) status = '🔴 Забанен';
@@ -507,7 +502,6 @@
         };
         document.getElementById('closeAdminUserModalBtn').onclick = () => document.getElementById('adminUserModal').style.display = 'none';
 
-        // Базовые обработчики
         document.getElementById('clickBtn').onclick = clickAction;
         document.getElementById('refreshBtn').onclick = refreshUser;
         document.getElementById('settingsBtn').onclick = () => document.getElementById('settingsModal').style.display = 'flex';
@@ -522,137 +516,4 @@
             }
         };
 
-        document.getElementById('changePasswordBtn').onclick = () => document.getElementById('changePasswordModal').style.display = 'flex';
-        document.getElementById('closeChangePasswordBtn').onclick = () => document.getElementById('changePasswordModal').style.display = 'none';
-        document.getElementById('submitChangePasswordBtn').onclick = async () => {
-            const oldPwd = document.getElementById('oldPassword').value;
-            const newPwd = document.getElementById('newPassword').value;
-            const confirmPwd = document.getElementById('confirmPassword').value;
-            if (!oldPwd || !newPwd || !confirmPwd) { showToast('Заполните все поля', true); return; }
-            if (newPwd !== confirmPwd) { showToast('Новый пароль не совпадает', true); return; }
-            const res = await apiCall('/api/changePassword', { tgId: currentTgId, oldPassword: oldPwd, newPassword: newPwd });
-            if (res.success) { showToast('Пароль изменён'); document.getElementById('changePasswordModal').style.display = 'none'; }
-            else showToast(res.error, true);
-        };
-
-        document.getElementById('lightThemeBtn').onclick = async () => {
-            document.body.classList.remove('dark'); document.body.classList.add('light');
-            await apiCall('/api/updateTheme', { tgId: currentTgId, theme: 'light' });
-        };
-        document.getElementById('darkThemeBtn').onclick = async () => {
-            document.body.classList.remove('light'); document.body.classList.add('dark');
-            await apiCall('/api/updateTheme', { tgId: currentTgId, theme: 'dark' });
-        };
-
-        document.getElementById('activateBtn').onclick = async () => {
-            const code = document.getElementById('promoCode').value.trim().toUpperCase();
-            if (!code) return;
-            const data = await apiCall('/api/promo', { tgId: currentTgId, code });
-            if (data.success) { currentUser.balance = data.balance; updateUI(); showToast(`🎉 +${data.balance} коинов!`); }
-            else showToast(data.error, true);
-            document.getElementById('promoCode').value = '';
-        };
-
-        document.getElementById('transferBtn').onclick = async () => {
-            const toId = document.getElementById('transferTo').value.trim();
-            const amount = parseInt(document.getElementById('transferAmount').value);
-            if (!toId || !amount) { showToast('Введите ID и сумму', true); return; }
-            const data = await apiCall('/api/transfer', { fromTgId: currentTgId, toTgId: toId, amount });
-            if (data.success) { showToast(`✅ Переведено ${amount} коинов пользователю ${data.toName}`); refreshUser(); }
-            else showToast(data.error, true);
-            document.getElementById('transferTo').value = '';
-            document.getElementById('transferAmount').value = '';
-        };
-
-        function showPage(pageId) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
-            document.getElementById(`page-${pageId}`).classList.add('active-page');
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`.nav-btn[data-page="${pageId}"]`).classList.add('active');
-            if (pageId === 'leaderboard') loadLeaderboard();
-            if (pageId === 'admin' && currentTgId === ADMIN_ID) loadAdminUsers();
-            if (pageId === 'quests') renderQuests();
-            if (pageId === 'streak') renderStreakRewards();
-        }
-        document.querySelectorAll('.nav-btn').forEach(btn => btn.onclick = () => showPage(btn.getAttribute('data-page')));
-
-        const avatars = ["😀","😎","🦊","🐱","🐶","🐼","🐧","🦄","🍕","🎮","⚽","🎵","📚","💎","🌟","🔥","❤️"];
-        function renderAvatarSelector() {
-            const container = document.getElementById('avatarSelector');
-            container.innerHTML = '';
-            avatars.forEach(emoji => {
-                const div = document.createElement('div');
-                div.className = 'avatar-option';
-                div.innerText = emoji;
-                div.onclick = () => {
-                    document.querySelectorAll('.avatar-option').forEach(opt => opt.classList.remove('selected'));
-                    div.classList.add('selected');
-                    document.getElementById('registerBtn').setAttribute('data-avatar', emoji);
-                };
-                container.appendChild(div);
-            });
-            const first = container.firstChild;
-            if (first) { first.classList.add('selected'); document.getElementById('registerBtn').setAttribute('data-avatar', avatars[0]); }
-        }
-
-        function renderAvatarPicker() {
-            const grid = document.getElementById('avatarGrid');
-            grid.innerHTML = '';
-            avatars.forEach(e => {
-                const div = document.createElement('div');
-                div.innerText = e;
-                div.style.cssText = 'font-size:42px; background:rgba(255,255,255,0.1); border-radius:20px; padding:10px; text-align:center; cursor:pointer;';
-                div.onclick = async () => {
-                    const res = await apiCall('/api/updateAvatar', { tgId: currentTgId, avatar: e });
-                    if (res.success) { currentUser.avatar = e; updateUI(); document.getElementById('avatarModal').style.display = 'none'; }
-                };
-                grid.appendChild(div);
-            });
-        }
-        document.getElementById('avatarBtn').onclick = () => { renderAvatarPicker(); document.getElementById('avatarModal').style.display = 'flex'; };
-        document.getElementById('closeAvatarBtn').onclick = () => document.getElementById('avatarModal').style.display = 'none';
-
-        document.getElementById('registerBtn').onclick = () => {
-            const tgId = document.getElementById('regTgId').value.trim();
-            const nick = document.getElementById('regNick').value.trim();
-            const pwd = document.getElementById('regPassword').value;
-            const avatar = document.getElementById('registerBtn').getAttribute('data-avatar') || '🧩';
-            if (!nick || !pwd) { showToast('Заполните ник и пароль', true); return; }
-            register(tgId, nick, pwd, avatar);
-        };
-        document.getElementById('loginBtn').onclick = () => {
-            const tgId = document.getElementById('loginTgId').value.trim();
-            const pwd = document.getElementById('loginPassword').value;
-            if (!tgId || !pwd) { showToast('Введите ID и пароль', true); return; }
-            login(tgId, pwd);
-        };
-        document.getElementById('showLoginBtn').onclick = () => {
-            document.getElementById('registerForm').style.display = 'none';
-            document.getElementById('loginForm').style.display = 'block';
-        };
-        document.getElementById('showRegisterBtn').onclick = () => {
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('registerForm').style.display = 'block';
-        };
-
-        renderAvatarSelector();
-        const savedTgId = localStorage.getItem('currentTgId');
-        if (savedTgId) {
-            loadUser(savedTgId).then(user => {
-                if (user && !user.isBanned) {
-                    currentUser = user; currentTgId = savedTgId;
-                    document.getElementById('authContainer').style.display = 'none';
-                    document.getElementById('gameContainer').style.display = 'block';
-                    if (currentTgId === ADMIN_ID) document.getElementById('adminNavBtn').style.display = 'block';
-                    updateUI(); loadLeaderboard(); renderShop(); renderQuests(); renderStreakRewards();
-                    if (user.theme === 'light') document.body.classList.add('light');
-                    else if (user.theme === 'dark') document.body.classList.add('dark');
-                    if (currentUser.notifications?.length) currentUser.notifications.forEach(n => showToast(n));
-                    if (updateInterval) clearInterval(updateInterval);
-                    updateInterval = setInterval(() => refreshUser(), 30000);
-                } else logout();
-            }).catch(() => logout());
-        }
-    </script>
-</body>
-</html>
+        document.getElementById('changePasswordBtn').onclick = () => document.getElementById('changePasswordModal').style.display
