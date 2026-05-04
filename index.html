@@ -118,15 +118,12 @@
         </div>
 
         <div id="page-shop" class="page"><div class="card"><h3>🛍️ МАГАЗИН</h3><div id="shopItems"></div></div></div>
-        
         <div id="page-quests" class="page">
             <div class="card"><h3>📋 ЕЖЕДНЕВНЫЕ КВЕСТЫ</h3><div id="dailyQuest"></div><h3>📆 ЕЖЕНЕДЕЛЬНЫЕ КВЕСТЫ</h3><div id="weeklyQuest"></div></div>
         </div>
-        
         <div id="page-streak" class="page">
             <div class="card"><h3>🔥 ДОРОГА СЕРИИ</h3><div id="streakRewards"></div></div>
         </div>
-
         <div id="page-transfer" class="page"><div class="card"><h3>🤝 ПЕРЕВОД</h3><input id="transferTo" placeholder="ID получателя"><input id="transferAmount" type="number" placeholder="Сумма"><button id="transferBtn">Отправить</button><div id="transferStatus" class="status-msg"></div></div></div>
         <div id="page-leaderboard" class="page"><div class="card"><h3>🏆 ТОП ИГРОКОВ</h3><div id="leaderboardList">Загрузка...</div></div></div>
         <div id="page-admin" class="page"><div class="card"><h3>👑 АДМИНКА</h3><div id="adminPanel"></div></div></div>
@@ -323,18 +320,28 @@
         }
 
         async function clickAction() {
-            const data = await apiCall('/api/click', { tgId: currentTgId });
-            if (data.balance !== undefined) {
-                currentUser.balance = data.balance;
-                currentUser.gold = data.gold;
-                currentUser.clicks = data.clicks;
-                currentUser.streak = data.streak;
-                currentUser.quests = data.quests;
-                updateUI();
-                renderQuests();
-                renderStreakRewards();
-                if (data.gold > currentUser.gold) showToast(`✨ Выпал Gold Coin! +1 💛`);
-            } else if (data.error) showToast(data.error, true);
+            if (!currentUser) { showToast('Сначала войдите в аккаунт!', true); return; }
+            try {
+                const res = await fetch(`${API_URL}/api/click`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tgId: currentTgId })
+                });
+                const data = await res.json();
+                if (data.balance !== undefined) {
+                    currentUser.balance = data.balance;
+                    currentUser.gold = data.gold;
+                    currentUser.clicks = data.clicks;
+                    currentUser.streak = data.streak;
+                    currentUser.quests = data.quests;
+                    updateUI();
+                    renderQuests();
+                    renderStreakRewards();
+                    if (data.gold > currentUser.gold) showToast(`✨ Выпал Gold Coin! +1 💛`);
+                } else if (data.error) showToast(data.error, true);
+            } catch (e) {
+                showToast('Ошибка связи с сервером', true);
+            }
         }
 
         async function buy(itemId, cost, currency, extra = null) {
@@ -429,7 +436,7 @@
             const container = document.getElementById('adminPanel');
             if (!container) return;
             if (users.error) { container.innerHTML = 'Ошибка загрузки'; return; }
-            let html = '<table class="admin-table"></tr><th>ID</th><th>Ник</th><th>Баланс</th><th>Gold</th><th>Статус</th><th>Действия</th></tr>';
+            let html = '<table class="admin-table"><tr><th>ID</th><th>Ник</th><th>Баланс</th><th>Gold</th><th>Статус</th><th>Действия</th></tr>';
             users.forEach(u => {
                 let status = '';
                 if (u.isBanned) status = '🔴 Забанен';
@@ -592,7 +599,7 @@
             avatars.forEach(e => {
                 const div = document.createElement('div');
                 div.innerText = e;
-                div.style.cssText = 'font-size:42px; background:rgba(255,255,255,0.1); border-radius:20px; padding:10px; text-align:center; cursor:pointer;';
+                div.style.cssText = 'font-size:42px; background:rgba(255,255,255,0.1); border-radius:20px; padding:10px; text-align:center; cursor:pointer';
                 div.onclick = async () => {
                     const res = await apiCall('/api/updateAvatar', { tgId: currentTgId, avatar: e });
                     if (res.success) {
@@ -633,9 +640,6 @@
             document.getElementById('loginForm').style.display = 'none';
             document.getElementById('registerForm').style.display = 'block';
         };
-
-        // пока нет /api/promo, отключаем кнопку
-        // document.getElementById('activateBtn')...
 
         // Инициализация
         renderAvatarSelector();
