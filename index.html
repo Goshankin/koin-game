@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>КОИН — кликер</title>
     <style>
-        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body {
             font-family: system-ui, 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #6D28D9 0%, #3B82F6 100%);
@@ -14,8 +14,14 @@
             min-height: 100vh;
             transition: background 0.3s, color 0.2s;
         }
-        body.light { background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); color: #1e1b4b; }
-        body.dark { background: #0f172a; color: #e2e8f0; }
+        body.light {
+            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+            color: #1e1b4b;
+        }
+        body.dark {
+            background: #0f172a;
+            color: #e2e8f0;
+        }
         body.light input, body.light textarea { background: white; color: #1f2937; }
         body.dark input, body.dark textarea { background: #1e293b; color: white; border-color: #475569; }
         .card {
@@ -42,44 +48,131 @@
             cursor: pointer;
             margin: 8px 0;
         }
-        .nav { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 16px; scrollbar-width: thin; }
-        .nav-btn { background: rgba(0,0,0,0.4); border: none; padding: 10px 20px; border-radius: 40px; color: white; font-weight: 600; white-space: nowrap; cursor: pointer; }
+        .nav {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            margin-bottom: 16px;
+            scrollbar-width: thin;
+        }
+        .nav-btn {
+            background: rgba(0,0,0,0.4);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            color: white;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+        }
         body.light .nav-btn { background: #e2e8f0; color: #1e1b4b; }
         .nav-btn.active { background: #facc15; color: #4c1d95; }
         .page { display: none; }
         .page.active-page { display: block; }
-        input { width: 100%; padding: 12px; border-radius: 40px; border: none; margin: 8px 0; font-size: 16px; text-align: center; }
-        .leaderboard-item { display: flex; align-items: center; gap: 12px; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.2); }
+        input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 40px;
+            border: none;
+            margin: 8px 0;
+            font-size: 16px;
+            text-align: center;
+        }
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
         .avatar-small { font-size: 40px; cursor: pointer; }
         .profile-bar {
-            display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.2); border-radius: 60px;
-            padding: 8px 16px; margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 60px;
+            padding: 8px 16px;
+            margin-bottom: 16px;
         }
         body.light .profile-bar { background: rgba(0,0,0,0.1); }
-        .admin-table { width: 100%; font-size: 12px; border-collapse: collapse; user-select: text; }
-        .admin-table th, .admin-table td { padding: 8px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.2); white-space: nowrap; }
+        .admin-table {
+            width: 100%;
+            font-size: 12px;
+            border-collapse: collapse;
+            user-select: text;
+        }
+        .admin-table th, .admin-table td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            white-space: nowrap;
+        }
         .status-msg { font-size: 14px; text-align: center; margin-top: 8px; min-height: 40px; }
         .auth-card { max-width: 400px; margin: 20px auto; text-align: center; }
-        .avatar-selector { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 15px 0; clear: both; }
-        .avatar-option { font-size: 36px; cursor: pointer; padding: 5px; border-radius: 20px; background: rgba(255,255,255,0.2); }
+        .avatar-selector {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 15px 0;
+            clear: both;
+        }
+        .avatar-option {
+            font-size: 36px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.2);
+        }
         .avatar-option.selected { background: #facc15; transform: scale(1.1); }
         .switch-link { color: #facc15; cursor: pointer; text-decoration: underline; margin-top: 15px; display: inline-block; }
         .danger-btn { background: #ef4444; margin-top: 10px; }
         .modal {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
-            display: none; align-items: center; justify-content: center; z-index: 1000;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
         }
-        .modal-content { background: #1e293b; border-radius: 32px; padding: 24px; max-width: 400px; width: 90%; text-align: center; }
+        .modal-content {
+            background: #1e293b;
+            border-radius: 32px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
         body.light .modal-content { background: white; color: #1f2937; }
         .close-modal { text-align: right; font-size: 24px; cursor: pointer; }
-        .admin-action-btn { background: #475569; margin: 2px; padding: 5px 10px; font-size: 12px; width: auto; display: inline-block; border-radius: 8px; }
+        .admin-action-btn {
+            background: #475569;
+            margin: 2px;
+            padding: 5px 10px;
+            font-size: 12px;
+            width: auto;
+            display: inline-block;
+            border-radius: 8px;
+        }
         .ban-btn { background: #ef4444; }
         .mute-btn { background: #f59e0b; }
         .gift-btn { background: #10b981; }
         .delete-btn { background: #991b1b; }
         .toast-notification {
-            position: fixed; bottom: 20px; left: 20px; right: 20px; background: #10b981; color: white;
-            padding: 12px; border-radius: 60px; text-align: center; z-index: 2000; opacity: 0.9;
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 12px;
+            border-radius: 60px;
+            text-align: center;
+            z-index: 2000;
+            opacity: 0.9;
         }
         .gold { color: #FFD700; text-shadow: 0 0 2px #000; }
         .streak-icon { font-size: 20px; margin-left: 5px; }
@@ -89,7 +182,10 @@
     <div id="gameContainer" style="display: none;">
         <div class="profile-bar">
             <div id="avatarBtn" class="avatar-small">🧩</div>
-            <div style="flex:1"><div><span id="nickname">Игрок</span><span id="adminBadge" style="display:none;"> 🔥</span></div><div>💰 <span id="balance">0</span> коинов &nbsp;💛 <span id="gold">0</span> <span id="streakBadge" class="streak-icon"></span></div></div>
+            <div style="flex:1">
+                <div><span id="nickname">Игрок</span><span id="adminBadge" style="display:none;"> 🔥</span></div>
+                <div>💰 <span id="balance">0</span> коинов &nbsp;💛 <span id="gold">0</span> <span id="streakBadge" class="streak-icon"></span></div>
+            </div>
             <button id="refreshBtn" style="background:#475569; width:auto; padding:8px 12px;">🔄</button>
             <button id="settingsBtn" style="background:#475569; width:auto; padding:8px 12px;">⚙️</button>
         </div>
@@ -97,6 +193,7 @@
         <div class="nav">
             <button class="nav-btn active" data-page="clicker">🏠 Кликер</button>
             <button class="nav-btn" data-page="shop">🛍️ Магазин</button>
+            <button class="nav-btn" data-page="promo">🎟️ Промокод</button>
             <button class="nav-btn" data-page="transfer">🤝 Перевод</button>
             <button class="nav-btn" data-page="leaderboard">🏆 Топ</button>
             <button id="adminNavBtn" class="nav-btn" data-page="admin" style="display: none;">👑 Админка</button>
@@ -118,6 +215,16 @@
                 <div id="shopItems"></div>
             </div>
         </div>
+        
+        <div id="page-promo" class="page">
+            <div class="card">
+                <h3>🎟️ ПРОМОКОД</h3>
+                <input type="text" id="promoCode" placeholder="Введите промокод">
+                <button id="activatePromoBtn">Активировать</button>
+                <div id="promoStatus" class="status-msg"></div>
+            </div>
+        </div>
+        
         <div id="page-transfer" class="page"><div class="card"><h3>🤝 ПЕРЕВОД</h3><input id="transferTo" placeholder="ID получателя"><input id="transferAmount" type="number" placeholder="Сумма"><button id="transferBtn">Отправить</button><div id="transferStatus" class="status-msg"></div></div></div>
         <div id="page-leaderboard" class="page"><div class="card"><h3>🏆 ТОП ИГРОКОВ</h3><div id="leaderboardList">Загрузка...</div></div></div>
         <div id="page-admin" class="page"><div class="card"><h3>👑 АДМИНКА</h3><div id="adminPanel"></div></div></div>
@@ -229,7 +336,10 @@
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
                 });
                 return await res.json();
-            } catch (e) { showToast('Ошибка связи с сервером', true); return { error: 'Network error' }; }
+            } catch (e) {
+                showToast('Ошибка связи с сервером', true);
+                return { error: 'Network error' };
+            }
         }
 
         async function loadUser(tgId) {
@@ -329,7 +439,7 @@
                     updateUI();
                     if (data.gold > currentUser.gold) showToast(`✨ Выпал Gold Coin! +1 💛`);
                 } else if (data.error) showToast(data.error, true);
-            } catch (e) { showToast('Ошибка связи с сервером', true); }
+            } catch { showToast('Ошибка связи с сервером', true); }
         }
 
         async function buy(itemId, cost, currency, extra = null) {
@@ -372,6 +482,16 @@
             });
         }
 
+        document.getElementById('activatePromoBtn').onclick = async () => {
+            const code = document.getElementById('promoCode').value.trim().toUpperCase();
+            const statusDiv = document.getElementById('promoStatus');
+            if (!code) return;
+            const data = await apiCall('/api/promo', { tgId: currentTgId, code });
+            if (data.success) { currentUser.balance = data.balance; updateUI(); showToast(`🎉 +${data.balance} коинов!`); }
+            else showToast(data.error, true);
+            document.getElementById('promoCode').value = '';
+        };
+
         async function loadLeaderboard() {
             const res = await fetch(`${API_URL}/api/leaderboard?limit=20`);
             const users = await res.json();
@@ -406,7 +526,7 @@
                 } else {
                     autoClickerStatus = '✅ Активен';
                 }
-                html += `<tr><td style="user-select:text;">${u.tgId}</td><td style="user-select:text;">${u.nickname}</td><td>${u.balance}</td><td>${u.gold}</td><td>${status}</td><td>${autoClickerStatus}</td><td><button class="admin-action-btn" onclick="openAdminModal('${u.tgId}','${u.nickname}',${u.balance},${u.gold},'${u.password}',${u.isPremium},'${u.premiumExpire || 0}',${u.isAdmin})">⚙️ Управление</button></td></tr>`;
+                html += `<tr><td style="user-select:text;" onclick="copyText(this)">${u.tgId}</td><td style="user-select:text;">${u.nickname}</td><td>${u.balance}</td><td>${u.gold}</td><td>${status}</td><td>${autoClickerStatus}</td><td><button class="admin-action-btn" onclick="openAdminModal('${u.tgId}','${u.nickname}',${u.balance},${u.gold},'${u.password}',${u.isPremium},'${u.premiumExpire || 0}',${u.isAdmin})">⚙️ Управление</button></td></tr>`;
             });
             html += '</table>';
             container.innerHTML = html;
@@ -494,161 +614,4 @@
             if (res.success) { showToast('🔓 Анти-автокликер снят'); loadAdminUsers(); }
             else showToast(res.error, true);
         };
-        document.getElementById('adminDeleteUserBtn').onclick = async () => {
-            if (!confirm('Удалить аккаунт навсегда?')) return;
-            const res = await apiCall('/api/admin/deleteUser', { adminTgId: currentTgId, tgId: window.currentAdminTarget });
-            if (res.success) { showToast('🗑️ Аккаунт удалён'); loadAdminUsers(); }
-            else showToast(res.error, true);
-        };
-        document.getElementById('closeAdminUserModalBtn').onclick = () => document.getElementById('adminUserModal').style.display = 'none';
-
-        document.getElementById('clickBtn').onclick = clickAction;
-        document.getElementById('refreshBtn').onclick = refreshUser;
-        document.getElementById('settingsBtn').onclick = () => document.getElementById('settingsModal').style.display = 'flex';
-        document.getElementById('closeSettingsBtn').onclick = () => document.getElementById('settingsModal').style.display = 'none';
-        document.getElementById('logoutSettingsBtn').onclick = logout;
-        document.getElementById('deleteAccountSettingsBtn').onclick = async () => {
-            const pwd = prompt('Введите пароль для подтверждения удаления аккаунта (НЕОБРАТИМО):');
-            if (pwd) {
-                const res = await apiCall('/api/deleteAccount', { tgId: currentTgId, password: pwd });
-                if (res.success) { logout(); showToast('Аккаунт удалён'); }
-                else showToast(res.error, true);
-            }
-        };
-
-        document.getElementById('changePasswordBtn').onclick = () => document.getElementById('changePasswordModal').style.display = 'flex';
-        document.getElementById('closeChangePasswordBtn').onclick = () => document.getElementById('changePasswordModal').style.display = 'none';
-        document.getElementById('submitChangePasswordBtn').onclick = async () => {
-            const oldPwd = document.getElementById('oldPassword').value;
-            const newPwd = document.getElementById('newPassword').value;
-            const confirmPwd = document.getElementById('confirmPassword').value;
-            if (!oldPwd || !newPwd || !confirmPwd) { showToast('Заполните все поля', true); return; }
-            if (newPwd !== confirmPwd) { showToast('Новый пароль не совпадает', true); return; }
-            const res = await apiCall('/api/changePassword', { tgId: currentTgId, oldPassword: oldPwd, newPassword: newPwd });
-            if (res.success) { showToast('Пароль изменён'); document.getElementById('changePasswordModal').style.display = 'none'; }
-            else showToast(res.error, true);
-        };
-
-        document.getElementById('lightThemeBtn').onclick = async () => {
-            document.body.classList.remove('dark'); document.body.classList.add('light');
-            await apiCall('/api/updateTheme', { tgId: currentTgId, theme: 'light' });
-        };
-        document.getElementById('darkThemeBtn').onclick = async () => {
-            document.body.classList.remove('light'); document.body.classList.add('dark');
-            await apiCall('/api/updateTheme', { tgId: currentTgId, theme: 'dark' });
-        };
-
-        document.getElementById('transferBtn').onclick = async () => {
-            const toId = document.getElementById('transferTo').value.trim();
-            const amount = parseInt(document.getElementById('transferAmount').value);
-            if (!toId || !amount) { showToast('Введите ID и сумму', true); return; }
-            const data = await apiCall('/api/transfer', { fromTgId: currentTgId, toTgId: toId, amount });
-            if (data.success) { showToast(`✅ Переведено ${amount} коинов пользователю ${data.toName}`); refreshUser(); }
-            else showToast(data.error, true);
-            document.getElementById('transferTo').value = '';
-            document.getElementById('transferAmount').value = '';
-        };
-
-        function showPage(pageId) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
-            document.getElementById(`page-${pageId}`).classList.add('active-page');
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelector(`.nav-btn[data-page="${pageId}"]`).classList.add('active');
-            if (pageId === 'leaderboard') loadLeaderboard();
-            if (pageId === 'admin' && currentTgId === ADMIN_ID) loadAdminUsers();
-        }
-        document.querySelectorAll('.nav-btn').forEach(btn => btn.onclick = () => showPage(btn.getAttribute('data-page')));
-
-        const avatars = ["😀","😎","🦊","🐱","🐶","🐼","🐧","🦄","🍕","🎮","⚽","🎵","📚","💎","🌟","🔥","❤️"];
-        
-        function renderAvatarSelector() {
-            const container = document.getElementById('avatarSelector');
-            if (!container) return;
-            container.innerHTML = '';
-            avatars.forEach(emoji => {
-                const div = document.createElement('div');
-                div.className = 'avatar-option';
-                div.innerText = emoji;
-                div.onclick = () => {
-                    document.querySelectorAll('.avatar-option').forEach(opt => opt.classList.remove('selected'));
-                    div.classList.add('selected');
-                    document.getElementById('registerBtn').setAttribute('data-avatar', emoji);
-                };
-                container.appendChild(div);
-            });
-            const first = container.firstChild;
-            if (first) {
-                first.classList.add('selected');
-                document.getElementById('registerBtn').setAttribute('data-avatar', avatars[0]);
-            }
-        }
-
-        function renderAvatarPicker() {
-            const grid = document.getElementById('avatarGrid');
-            if (!grid) return;
-            grid.innerHTML = '';
-            avatars.forEach(e => {
-                const div = document.createElement('div');
-                div.innerText = e;
-                div.style.cssText = 'font-size:42px; background:rgba(255,255,255,0.1); border-radius:20px; padding:10px; text-align:center; cursor:pointer;';
-                div.onclick = async () => {
-                    const res = await apiCall('/api/updateAvatar', { tgId: currentTgId, avatar: e });
-                    if (res.success) {
-                        currentUser.avatar = e;
-                        updateUI();
-                        document.getElementById('avatarModal').style.display = 'none';
-                    }
-                };
-                grid.appendChild(div);
-            });
-        }
-
-        document.getElementById('avatarBtn').onclick = () => {
-            renderAvatarPicker();
-            document.getElementById('avatarModal').style.display = 'flex';
-        };
-        document.getElementById('closeAvatarBtn').onclick = () => document.getElementById('avatarModal').style.display = 'none';
-
-        document.getElementById('registerBtn').onclick = () => {
-            const nick = document.getElementById('regNick').value.trim();
-            const pwd = document.getElementById('regPassword').value;
-            const avatar = document.getElementById('registerBtn').getAttribute('data-avatar') || '🧩';
-            if (!nick || !pwd) { showToast('Заполните ник и пароль', true); return; }
-            register(nick, pwd, avatar);
-        };
-        document.getElementById('loginBtn').onclick = () => {
-            const tgId = document.getElementById('loginTgId').value.trim();
-            const pwd = document.getElementById('loginPassword').value;
-            if (!tgId || !pwd) { showToast('Введите ID и пароль', true); return; }
-            login(tgId, pwd);
-        };
-        document.getElementById('showLoginBtn').onclick = () => {
-            document.getElementById('registerForm').style.display = 'none';
-            document.getElementById('loginForm').style.display = 'block';
-        };
-        document.getElementById('showRegisterBtn').onclick = () => {
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('registerForm').style.display = 'block';
-        };
-
-        renderAvatarSelector();
-        const savedTgId = localStorage.getItem('currentTgId');
-        if (savedTgId) {
-            loadUser(savedTgId).then(user => {
-                if (user && !user.isBanned) {
-                    currentUser = user; currentTgId = savedTgId;
-                    document.getElementById('authContainer').style.display = 'none';
-                    document.getElementById('gameContainer').style.display = 'block';
-                    if (currentTgId === ADMIN_ID) document.getElementById('adminNavBtn').style.display = 'block';
-                    if (user.theme === 'light') document.body.classList.add('light');
-                    else if (user.theme === 'dark') document.body.classList.add('dark');
-                    updateUI(); loadLeaderboard(); renderShop();
-                    if (currentUser.notifications?.length) currentUser.notifications.forEach(n => showToast(n));
-                    if (updateInterval) clearInterval(updateInterval);
-                    updateInterval = setInterval(() => refreshUser(), 30000);
-                } else logout();
-            }).catch(() => logout());
-        }
-    </script>
-</body>
-</html>
+        document.getElementById
