@@ -100,8 +100,6 @@
         <div class="nav">
             <button class="nav-btn active" data-page="clicker">🏠 Кликер</button>
             <button class="nav-btn" data-page="shop">🛍️ Магазин</button>
-            <button class="nav-btn" data-page="quests">📋 Квесты</button>
-            <button class="nav-btn" data-page="streak">🔥 Серия</button>
             <button class="nav-btn" data-page="transfer">🤝 Перевод</button>
             <button class="nav-btn" data-page="leaderboard">🏆 Топ</button>
             <button id="adminNavBtn" class="nav-btn" data-page="admin" style="display: none;">👑 Админка</button>
@@ -118,12 +116,6 @@
         </div>
 
         <div id="page-shop" class="page"><div class="card"><h3>🛍️ МАГАЗИН</h3><div id="shopItems"></div></div></div>
-        <div id="page-quests" class="page">
-            <div class="card"><h3>📋 ЕЖЕДНЕВНЫЕ КВЕСТЫ</h3><div id="dailyQuest"></div><h3>📆 ЕЖЕНЕДЕЛЬНЫЕ КВЕСТЫ</h3><div id="weeklyQuest"></div></div>
-        </div>
-        <div id="page-streak" class="page">
-            <div class="card"><h3>🔥 ДОРОГА СЕРИИ</h3><div id="streakRewards"></div></div>
-        </div>
         <div id="page-transfer" class="page"><div class="card"><h3>🤝 ПЕРЕВОД</h3><input id="transferTo" placeholder="ID получателя"><input id="transferAmount" type="number" placeholder="Сумма"><button id="transferBtn">Отправить</button><div id="transferStatus" class="status-msg"></div></div></div>
         <div id="page-leaderboard" class="page"><div class="card"><h3>🏆 ТОП ИГРОКОВ</h3><div id="leaderboardList">Загрузка...</div></div></div>
         <div id="page-admin" class="page"><div class="card"><h3>👑 АДМИНКА</h3><div id="adminPanel"></div></div></div>
@@ -253,8 +245,6 @@
                 updateUI();
                 loadLeaderboard();
                 renderShop();
-                renderQuests();
-                renderStreakRewards();
                 if (currentUser.notifications?.length) currentUser.notifications.forEach(n => showToast(n));
                 return true;
             } else { showToast(data.error, true); return false; }
@@ -274,8 +264,6 @@
                 updateUI();
                 loadLeaderboard();
                 renderShop();
-                renderQuests();
-                renderStreakRewards();
                 if (currentUser.notifications?.length) currentUser.notifications.forEach(n => showToast(n));
                 return true;
             } else { showToast(data.error || 'Аккаунт заблокирован', true); return false; }
@@ -287,8 +275,6 @@
                 currentUser = user;
                 if (currentUser.notifications?.length) currentUser.notifications.forEach(n => showToast(n));
                 updateUI();
-                renderQuests();
-                renderStreakRewards();
                 if (currentUser.isBanned) logout();
             }
         }
@@ -333,10 +319,7 @@
                     currentUser.gold = data.gold;
                     currentUser.clicks = data.clicks;
                     currentUser.streak = data.streak;
-                    currentUser.quests = data.quests;
                     updateUI();
-                    renderQuests();
-                    renderStreakRewards();
                     if (data.gold > currentUser.gold) showToast(`✨ Выпал Gold Coin! +1 💛`);
                 } else if (data.error) showToast(data.error, true);
             } catch (e) {
@@ -366,14 +349,13 @@
             if (!container) return;
             container.innerHTML = '';
             const items = [
-                { name: '⬆️ Улучшение клика +1 (5 мин)', cost: 1, currency: 'gold', id: 'clickPower' },
+                { name: '⬆️ Улучшение клика +1', cost: 100, currency: 'balance', id: 'clickPower' },
                 { name: '👑 Премиум на 30 дней', cost: 1500, currency: 'balance', id: 'premium' },
-                { name: '👑 Премиум на 30 дней (Gold)', cost: 15, currency: 'gold', id: 'premium' },
                 { name: '✏️ Сменить ник', cost: 100, currency: 'balance', id: 'changeNick', needNick: true }
             ];
             items.forEach(item => {
                 const btn = document.createElement('button');
-                btn.innerText = `${item.name} — ${item.cost} ${item.currency === 'gold' ? 'Gold' : 'коинов'}`;
+                btn.innerText = `${item.name} — ${item.cost} коинов`;
                 btn.onclick = () => {
                     if (item.needNick) {
                         const newNick = prompt('Введите новый ник (без 👑 и 🔥):', currentUser.nickname);
@@ -381,37 +363,6 @@
                     } else buy(item.id, item.cost, item.currency);
                 };
                 container.appendChild(btn);
-            });
-        }
-
-        function renderQuests() {
-            const dailyDiv = document.getElementById('dailyQuest');
-            const weeklyDiv = document.getElementById('weeklyQuest');
-            if (!dailyDiv) return;
-            dailyDiv.innerHTML = `
-                <div>Сделать ${currentUser?.quests?.daily?.target || 10} кликов за день</div>
-                <div class="quest-progress"><div class="quest-progress-fill" style="width: ${Math.min(100, (currentUser?.quests?.daily?.progress || 0) / (currentUser?.quests?.daily?.target || 10) * 100)}%"></div></div>
-                <div>${currentUser?.quests?.daily?.progress || 0}/${currentUser?.quests?.daily?.target || 10}</div>
-                <div>Награда: 50 коинов ${currentUser?.quests?.daily?.completed ? '✅' : '❌'}</div>
-            `;
-            weeklyDiv.innerHTML = `
-                <div>Сделать ${currentUser?.quests?.weekly?.target || 50} кликов за неделю</div>
-                <div class="quest-progress"><div class="quest-progress-fill" style="width: ${Math.min(100, (currentUser?.quests?.weekly?.progress || 0) / (currentUser?.quests?.weekly?.target || 50) * 100)}%"></div></div>
-                <div>${currentUser?.quests?.weekly?.progress || 0}/${currentUser?.quests?.weekly?.target || 50}</div>
-                <div>Награда: 5 Gold Coin 💛 ${currentUser?.quests?.weekly?.completed ? '✅' : '❌'}</div>
-            `;
-        }
-
-        const streakRewards = [3,7,14,30,60,100];
-        function renderStreakRewards() {
-            const container = document.getElementById('streakRewards');
-            if (!container) return;
-            container.innerHTML = '';
-            streakRewards.forEach(day => {
-                const div = document.createElement('div');
-                div.className = 'reward-item';
-                div.innerHTML = `<span>🔥 ${day} дней</span><span>${currentUser.streak >= day ? '✅' : '❌'} 100 коинов + 1 Gold</span>`;
-                container.appendChild(div);
             });
         }
 
@@ -562,8 +513,6 @@
             document.querySelector(`.nav-btn[data-page="${pageId}"]`).classList.add('active');
             if (pageId === 'leaderboard') loadLeaderboard();
             if (pageId === 'admin' && currentTgId === ADMIN_ID) loadAdminUsers();
-            if (pageId === 'quests') renderQuests();
-            if (pageId === 'streak') renderStreakRewards();
         }
         document.querySelectorAll('.nav-btn').forEach(btn => btn.onclick = () => showPage(btn.getAttribute('data-page')));
 
@@ -599,7 +548,7 @@
             avatars.forEach(e => {
                 const div = document.createElement('div');
                 div.innerText = e;
-                div.style.cssText = 'font-size:42px; background:rgba(255,255,255,0.1); border-radius:20px; padding:10px; text-align:center; cursor:pointer';
+                div.style.cssText = 'font-size:42px; background:rgba(255,255,255,0.1); border-radius:20px; padding:10px; text-align:center; cursor:pointer;';
                 div.onclick = async () => {
                     const res = await apiCall('/api/updateAvatar', { tgId: currentTgId, avatar: e });
                     if (res.success) {
@@ -653,7 +602,7 @@
                     if (currentTgId === ADMIN_ID) document.getElementById('adminNavBtn').style.display = 'block';
                     if (user.theme === 'light') document.body.classList.add('light');
                     else if (user.theme === 'dark') document.body.classList.add('dark');
-                    updateUI(); loadLeaderboard(); renderShop(); renderQuests(); renderStreakRewards();
+                    updateUI(); loadLeaderboard(); renderShop();
                     if (currentUser.notifications?.length) currentUser.notifications.forEach(n => showToast(n));
                     if (updateInterval) clearInterval(updateInterval);
                     updateInterval = setInterval(() => refreshUser(), 30000);
