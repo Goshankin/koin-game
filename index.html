@@ -817,6 +817,125 @@
                 } else logout();
             }).catch(() => logout());
         }
+        // ========== ФИКС АДМИНКИ (БАН, МУТ, АДМИНКА, ПРЕМИУМ) ==========
+function fixAdminButtons() {
+    // Кнопка «Забанить»
+    const banBtn = document.getElementById('adminBanBtn');
+    if (banBtn) {
+        banBtn.onclick = async () => {
+            const reason = prompt('Причина бана:');
+            if (!reason) return;
+            const res = await apiCall('/api/admin/ban', { adminTgId: currentTgId, tgId: window.currentAdminTarget, reason });
+            if (res.success) { showToast('🔨 Пользователь забанен'); loadAdminUsers(); }
+            else showToast(res.error, true);
+        };
+    }
+    
+    // Кнопка «Разбанить»
+    const unbanBtn = document.getElementById('adminUnbanBtn');
+    if (unbanBtn) {
+        unbanBtn.onclick = async () => {
+            const res = await apiCall('/api/admin/unban', { adminTgId: currentTgId, tgId: window.currentAdminTarget });
+            if (res.success) { showToast('✅ Пользователь разбанен'); loadAdminUsers(); }
+            else showToast(res.error, true);
+        };
+    }
+    
+    // Кнопка «Замутить»
+    const muteBtn = document.getElementById('adminMuteBtn');
+    if (muteBtn) {
+        muteBtn.onclick = async () => {
+            const minutes = parseInt(prompt('Время мута в минутах (1-43200):', '60'));
+            if (!minutes) return;
+            const res = await apiCall('/api/admin/mute', { adminTgId: currentTgId, tgId: window.currentAdminTarget, durationMinutes: minutes });
+            if (res.success) { showToast(`🔇 Пользователь замучен на ${minutes} минут`); loadAdminUsers(); }
+            else showToast(res.error, true);
+        };
+    }
+    
+    // Кнопка «Размутить»
+    const unmuteBtn = document.getElementById('adminUnmuteBtn');
+    if (unmuteBtn) {
+        unmuteBtn.onclick = async () => {
+            const res = await apiCall('/api/admin/unmute', { adminTgId: currentTgId, tgId: window.currentAdminTarget });
+            if (res.success) { showToast('🔊 Пользователь размучен'); loadAdminUsers(); }
+            else showToast(res.error, true);
+        };
+    }
+    
+    // Кнопка «Дать админку»
+    const giveAdminBtn = document.getElementById('adminGiveAdminBtn');
+    if (giveAdminBtn) {
+        giveAdminBtn.onclick = async () => {
+            const res = await apiCall('/api/admin/setAdmin', { adminTgId: currentTgId, tgId: window.currentAdminTarget, isAdmin: true });
+            if (res.success) { showToast('👑 Админка выдана'); loadAdminUsers(); }
+            else showToast(res.error, true);
+        };
+    }
+    
+    // Кнопка «Забрать админку»
+    const removeAdminBtn = document.getElementById('adminRemoveAdminBtn');
+    if (removeAdminBtn) {
+        removeAdminBtn.onclick = async () => {
+            const res = await apiCall('/api/admin/setAdmin', { adminTgId: currentTgId, tgId: window.currentAdminTarget, isAdmin: false });
+            if (res.success) { showToast('❌ Админка забрана'); loadAdminUsers(); }
+            else showToast(res.error, true);
+        };
+    }
+    
+    // Кнопка «Подарить премиум»
+    const giftPremiumBtn = document.getElementById('adminGiftPremiumBtn');
+    if (giftPremiumBtn) {
+        giftPremiumBtn.onclick = async () => {
+            const res = await apiCall('/api/admin/giftPremium', { adminTgId: currentTgId, tgId: window.currentAdminTarget, days: 30 });
+            if (res.success) { showToast('👑 Премиум подарен!'); loadAdminUsers(); }
+            else showToast(res.error, true);
+        };
+    }
+    
+    // Кнопка «Забрать премиум»
+    const removePremiumBtn = document.getElementById('adminRemovePremiumBtn');
+    if (removePremiumBtn) {
+        removePremiumBtn.onclick = async () => {
+            const reason = prompt('Причина удаления премиума:');
+            if (!reason) return;
+            const res = await apiCall('/api/admin/removePremium', { adminTgId: currentTgId, tgId: window.currentAdminTarget, reason });
+            if (res.success) { showToast('❌ Премиум удалён'); loadAdminUsers(); }
+            else showToast(res.error, true);
+        };
+    }
+    
+    // Кнопка «Установить баланс»
+    const setBalanceBtn = document.getElementById('adminSetBalanceBtn');
+    if (setBalanceBtn) {
+        setBalanceBtn.onclick = async () => {
+            const newBalance = parseInt(document.getElementById('adminNewBalance').value);
+            if (isNaN(newBalance)) return;
+            const res = await apiCall('/api/admin/setBalance', { adminTgId: currentTgId, tgId: window.currentAdminTarget, newBalance });
+            if (res.success) { showToast('✅ Баланс изменён'); loadAdminUsers(); }
+            else showToast(res.error, true);
+        };
+    }
+    
+    // Кнопка «Установить Gold»
+    const setGoldBtn = document.getElementById('adminSetGoldBtn');
+    if (setGoldBtn) {
+        setGoldBtn.onclick = async () => {
+            const newGold = parseInt(document.getElementById('adminNewGold').value);
+            if (isNaN(newGold)) return;
+            const res = await apiCall('/api/admin/setGold', { adminTgId: currentTgId, tgId: window.currentAdminTarget, newGold });
+            if (res.success) { showToast('✅ Gold изменён'); loadAdminUsers(); }
+            else showToast(res.error, true);
+        };
+    }
+}
+
+// Вызываем фикс после загрузки админки
+const originalLoadAdminUsers = loadAdminUsers;
+window.loadAdminUsers = async () => {
+    await originalLoadAdminUsers();
+    fixAdminButtons();
+};
     </script>
 </body>
 </html>
