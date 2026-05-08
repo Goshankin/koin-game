@@ -14,14 +14,8 @@
             min-height: 100vh;
             transition: background 0.3s, color 0.2s;
         }
-        body.light {
-            background: linear-gradient(135deg, #7c3aed, #2563eb);
-            color: white;
-        }
-        body.dark {
-            background: #0f172a;
-            color: #e2e8f0;
-        }
+        body.light { background: linear-gradient(135deg, #7c3aed, #2563eb); color: white; }
+        body.dark { background: #0f172a; color: #e2e8f0; }
         body.light input, body.light textarea { background: rgba(255,255,255,0.9); color: #1f2937; }
         body.dark input, body.dark textarea { background: #1e293b; color: white; border-color: #475569; }
         .card {
@@ -180,10 +174,18 @@
 </head>
 <body>
     <div id="gameContainer" style="display: none;">
+        <!-- ПРОФИЛЬ С ID И КНОПКОЙ ГЛАЗА -->
         <div class="profile-bar">
             <div id="avatarBtn" class="avatar-small">🧩</div>
             <div style="flex:1">
-                <div><span id="nickname">Игрок</span><span id="adminBadge" style="display:none;"> 🔥</span></div>
+                <div>
+                    <span id="nickname">Игрок</span>
+                    <span id="adminBadge" style="display:none;"> 🔥</span>
+                    <span style="margin-left: 12px; font-size: 12px; opacity: 0.7;">
+                        🆔 <span id="userIdDisplay">-</span>
+                        <button id="toggleIdBtn" style="width:auto; padding:2px 6px; font-size: 10px; margin-left: 4px;">👁️</button>
+                    </span>
+                </div>
                 <div>💰 <span id="balance">0</span> коинов &nbsp;💛 <span id="gold">0</span> <span id="streakBadge" class="streak-icon"></span></div>
             </div>
             <button id="refreshBtn" style="background:#475569; width:auto; padding:8px 12px;">🔄</button>
@@ -417,6 +419,12 @@
             document.getElementById('streakBadge').innerHTML = currentUser.streak > 0 ? '🔥' + currentUser.streak : '';
             if (currentUser.tgId === ADMIN_ID) document.getElementById('adminBadge').style.display = 'inline';
             else document.getElementById('adminBadge').style.display = 'none';
+            
+            // Отображение ID и кнопка глаза
+            const userIdSpan = document.getElementById('userIdDisplay');
+            if (userIdSpan) {
+                userIdSpan.innerText = currentUser.showId !== false ? currentUser.tgId : '🫥 скрыт';
+            }
         }
 
         function logout() {
@@ -429,7 +437,6 @@
             document.getElementById('loginForm').style.display = 'none';
         }
 
-        // Серия и квесты обновляются на сервере при клике
         async function clickAction() {
             if (!currentUser) { showToast('Сначала войдите в аккаунт!', true); return; }
             try {
@@ -448,7 +455,7 @@
                     renderStreakRewards();
                     if (data.gold > currentUser.gold) showToast(`✨ Выпал Gold Coin! +1 💛`);
                 } else if (data.error) showToast(data.error, true);
-            } catch (e) { showToast('Ошибка связи с сервером', true); }
+            } catch { showToast('Ошибка связи с сервером', true); }
         }
 
         async function buy(itemId, cost, currency, extra = null) {
@@ -572,7 +579,7 @@
                 } else {
                     autoClickerStatus = '✅ Активен';
                 }
-                html += `<tr><td style="user-select:text;">${u.tgId}</td><td style="user-select:text;">${u.nickname}</td><td style="user-select:text;">${u.balance}</td><td style="user-select:text;">${u.gold}</td><td>${status}</td><td>${autoClickerStatus}</td><td><button class="admin-action-btn" onclick="openAdminModal('${u.tgId}','${u.nickname}',${u.balance},${u.gold},'${u.password}',${u.isPremium},'${u.premiumExpire || 0}',${u.isAdmin})">⚙️ Управление</button></td></tr>`;
+                html += `<tr><td style="user-select:text;">${u.tgId}</td><td style="user-select:text;">${u.nickname}<td><td style="user-select:text;">${u.balance}</td><td style="user-select:text;">${u.gold}</td><td>${status}</td><td>${autoClickerStatus}</td><td><button class="admin-action-btn" onclick="openAdminModal('${u.tgId}','${u.nickname}',${u.balance},${u.gold},'${u.password}',${u.isPremium},'${u.premiumExpire || 0}',${u.isAdmin})">⚙️ Управление</button></td></tr>`;
             });
             html += '</table>';
             container.innerHTML = html;
@@ -704,6 +711,15 @@
             await apiCall('/api/updateTheme', { tgId: currentTgId, theme: 'dark' });
         };
 
+        document.getElementById('toggleIdBtn').onclick = async () => {
+            const res = await apiCall('/api/toggleShowId', { tgId: currentTgId });
+            if (res.success) {
+                currentUser.showId = res.showId;
+                updateUI();
+                showToast(res.showId ? '🆔 ID теперь виден' : '🫥 ID скрыт');
+            } else showToast(res.error, true);
+        };
+
         document.getElementById('transferBtn').onclick = async () => {
             const toId = document.getElementById('transferTo').value.trim();
             const amount = parseInt(document.getElementById('transferAmount').value);
@@ -817,125 +833,6 @@
                 } else logout();
             }).catch(() => logout());
         }
-        // ========== ФИКС АДМИНКИ (БАН, МУТ, АДМИНКА, ПРЕМИУМ) ==========
-function fixAdminButtons() {
-    // Кнопка «Забанить»
-    const banBtn = document.getElementById('adminBanBtn');
-    if (banBtn) {
-        banBtn.onclick = async () => {
-            const reason = prompt('Причина бана:');
-            if (!reason) return;
-            const res = await apiCall('/api/admin/ban', { adminTgId: currentTgId, tgId: window.currentAdminTarget, reason });
-            if (res.success) { showToast('🔨 Пользователь забанен'); loadAdminUsers(); }
-            else showToast(res.error, true);
-        };
-    }
-    
-    // Кнопка «Разбанить»
-    const unbanBtn = document.getElementById('adminUnbanBtn');
-    if (unbanBtn) {
-        unbanBtn.onclick = async () => {
-            const res = await apiCall('/api/admin/unban', { adminTgId: currentTgId, tgId: window.currentAdminTarget });
-            if (res.success) { showToast('✅ Пользователь разбанен'); loadAdminUsers(); }
-            else showToast(res.error, true);
-        };
-    }
-    
-    // Кнопка «Замутить»
-    const muteBtn = document.getElementById('adminMuteBtn');
-    if (muteBtn) {
-        muteBtn.onclick = async () => {
-            const minutes = parseInt(prompt('Время мута в минутах (1-43200):', '60'));
-            if (!minutes) return;
-            const res = await apiCall('/api/admin/mute', { adminTgId: currentTgId, tgId: window.currentAdminTarget, durationMinutes: minutes });
-            if (res.success) { showToast(`🔇 Пользователь замучен на ${minutes} минут`); loadAdminUsers(); }
-            else showToast(res.error, true);
-        };
-    }
-    
-    // Кнопка «Размутить»
-    const unmuteBtn = document.getElementById('adminUnmuteBtn');
-    if (unmuteBtn) {
-        unmuteBtn.onclick = async () => {
-            const res = await apiCall('/api/admin/unmute', { adminTgId: currentTgId, tgId: window.currentAdminTarget });
-            if (res.success) { showToast('🔊 Пользователь размучен'); loadAdminUsers(); }
-            else showToast(res.error, true);
-        };
-    }
-    
-    // Кнопка «Дать админку»
-    const giveAdminBtn = document.getElementById('adminGiveAdminBtn');
-    if (giveAdminBtn) {
-        giveAdminBtn.onclick = async () => {
-            const res = await apiCall('/api/admin/setAdmin', { adminTgId: currentTgId, tgId: window.currentAdminTarget, isAdmin: true });
-            if (res.success) { showToast('👑 Админка выдана'); loadAdminUsers(); }
-            else showToast(res.error, true);
-        };
-    }
-    
-    // Кнопка «Забрать админку»
-    const removeAdminBtn = document.getElementById('adminRemoveAdminBtn');
-    if (removeAdminBtn) {
-        removeAdminBtn.onclick = async () => {
-            const res = await apiCall('/api/admin/setAdmin', { adminTgId: currentTgId, tgId: window.currentAdminTarget, isAdmin: false });
-            if (res.success) { showToast('❌ Админка забрана'); loadAdminUsers(); }
-            else showToast(res.error, true);
-        };
-    }
-    
-    // Кнопка «Подарить премиум»
-    const giftPremiumBtn = document.getElementById('adminGiftPremiumBtn');
-    if (giftPremiumBtn) {
-        giftPremiumBtn.onclick = async () => {
-            const res = await apiCall('/api/admin/giftPremium', { adminTgId: currentTgId, tgId: window.currentAdminTarget, days: 30 });
-            if (res.success) { showToast('👑 Премиум подарен!'); loadAdminUsers(); }
-            else showToast(res.error, true);
-        };
-    }
-    
-    // Кнопка «Забрать премиум»
-    const removePremiumBtn = document.getElementById('adminRemovePremiumBtn');
-    if (removePremiumBtn) {
-        removePremiumBtn.onclick = async () => {
-            const reason = prompt('Причина удаления премиума:');
-            if (!reason) return;
-            const res = await apiCall('/api/admin/removePremium', { adminTgId: currentTgId, tgId: window.currentAdminTarget, reason });
-            if (res.success) { showToast('❌ Премиум удалён'); loadAdminUsers(); }
-            else showToast(res.error, true);
-        };
-    }
-    
-    // Кнопка «Установить баланс»
-    const setBalanceBtn = document.getElementById('adminSetBalanceBtn');
-    if (setBalanceBtn) {
-        setBalanceBtn.onclick = async () => {
-            const newBalance = parseInt(document.getElementById('adminNewBalance').value);
-            if (isNaN(newBalance)) return;
-            const res = await apiCall('/api/admin/setBalance', { adminTgId: currentTgId, tgId: window.currentAdminTarget, newBalance });
-            if (res.success) { showToast('✅ Баланс изменён'); loadAdminUsers(); }
-            else showToast(res.error, true);
-        };
-    }
-    
-    // Кнопка «Установить Gold»
-    const setGoldBtn = document.getElementById('adminSetGoldBtn');
-    if (setGoldBtn) {
-        setGoldBtn.onclick = async () => {
-            const newGold = parseInt(document.getElementById('adminNewGold').value);
-            if (isNaN(newGold)) return;
-            const res = await apiCall('/api/admin/setGold', { adminTgId: currentTgId, tgId: window.currentAdminTarget, newGold });
-            if (res.success) { showToast('✅ Gold изменён'); loadAdminUsers(); }
-            else showToast(res.error, true);
-        };
-    }
-}
-
-// Вызываем фикс после загрузки админки
-const originalLoadAdminUsers = loadAdminUsers;
-window.loadAdminUsers = async () => {
-    await originalLoadAdminUsers();
-    fixAdminButtons();
-};
     </script>
 </body>
 </html>
